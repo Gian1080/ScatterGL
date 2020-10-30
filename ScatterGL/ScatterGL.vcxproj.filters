@@ -36,4 +36,8 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\VertexShader.vert" />
+    <None Include="Shaders\FragmentShader.frag" />
+  </ItemGroup>
 </Project>
