@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 #include <string>
+#include <fstream>
+#include <sstream>
 #include <iostream>
 #include <istream>
 #include <exception>
