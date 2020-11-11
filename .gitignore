@@ -3,3 +3,4 @@
 x64/
 x86/
 Debug/
+stb_image.h

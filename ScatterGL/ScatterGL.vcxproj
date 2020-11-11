@@ -149,6 +149,7 @@
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\pch.cpp" />
     <ClCompile Include="Source\Shader.cpp" />
+    <ClCompile Include="Source\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\FragmentShader.frag" />
