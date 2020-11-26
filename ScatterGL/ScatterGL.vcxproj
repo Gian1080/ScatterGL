@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Header\pch.h" />
+    <ClInclude Include="Header\ScatterGLApplication.h" />
     <ClInclude Include="Header\Shader.h" />
     <ClInclude Include="Libraries\include\glad\glad.h" />
     <ClInclude Include="Libraries\include\KHR\khrplatform.h" />
