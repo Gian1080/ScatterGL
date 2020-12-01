@@ -8,6 +8,7 @@
 #include <istream>
 #include <exception>
 #include <assert.h>
+#include <vector>
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"

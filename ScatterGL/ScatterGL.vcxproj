@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Header\GLCamera.h" />
     <ClInclude Include="Header\pch.h" />
     <ClInclude Include="Header\ScatterGLApplication.h" />
     <ClInclude Include="Header\Shader.h" />
@@ -147,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\src\glad.c" />
+    <ClCompile Include="Source\GLCamera.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\pch.cpp" />
     <ClCompile Include="Source\Shader.cpp" />

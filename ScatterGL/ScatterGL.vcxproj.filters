@@ -30,6 +30,9 @@
     <ClInclude Include="Header\ScatterGLApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Header\GLCamera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\main.cpp">
@@ -45,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\stb_image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GLCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
