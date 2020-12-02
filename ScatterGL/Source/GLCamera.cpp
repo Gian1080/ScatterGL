@@ -14,20 +14,24 @@ namespace ScatterGL
 		if (direction == BACKWARD) position -= front * velocity;
 		if (direction == LEFT) position -= right * velocity;
 		if (direction == RIGHT) position += right * velocity;
+		if (direction == UP) position += up * velocity;
+		if (direction == DOWN) position -= up * velocity;
+
 	}
 
-	void GLCamera::processMouseMovement(float xOffset, float yOffset, GLboolean constrainPitch = true)
+	void GLCamera::processMouseMovement(float xOffset, float yOffset)
 	{
 		xOffset *= mouseSensitivity;
 		yOffset *= mouseSensitivity;
 
-		yaw = xOffset;
+		yaw += xOffset;
 		pitch += yOffset;
-
+		GLboolean constrainPitch = true;
 		if (constrainPitch)
 		{
 			if (pitch > 89.0f) pitch = 89.0f;
 			if (pitch < -89.0f) pitch = -89.0f;
+			
 		}
 		GLCamera::updateCameraVectors();
 	}

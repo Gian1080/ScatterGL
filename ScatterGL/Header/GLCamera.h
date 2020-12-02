@@ -7,13 +7,15 @@ enum Camera_Direction
 	FORWARD,
 	BACKWARD,
 	LEFT,
-	RIGHT
+	RIGHT,
+	UP,
+	DOWN
 };
 
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
-const float SPEED = 2.5f;
-const float SENSITIVITY = 0.01f;
+const float SPEED = 2.22f;
+const float SENSITIVITY = 0.05f;
 const float ZOOM = 45.0f;
 
 namespace ScatterGL
@@ -79,7 +81,7 @@ public:
 
 	void processKeyboard(Camera_Direction direction, float deltaTime);
 
-	void processMouseMovement(float xOffset, float yOffset, GLboolean constrainPitch);
+	void processMouseMovement(float xOffset, float yOffset);
 
 	void processMouseScroll(float yOffset);
 
