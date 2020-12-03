@@ -5,6 +5,50 @@
 
 unsigned int indicesSquare[] = { 0, 1, 3, 1, 2, 3 };
 
+float cubeVertices[] = {
+	-0.5f, -0.5f, -0.5f,
+	 0.5f, -0.5f, -0.5f,
+	 0.5f,  0.5f, -0.5f,
+	 0.5f,  0.5f, -0.5f,
+	-0.5f,  0.5f, -0.5f,
+	-0.5f, -0.5f, -0.5f,
+
+	-0.5f, -0.5f,  0.5f,
+	 0.5f, -0.5f,  0.5f,
+	 0.5f,  0.5f,  0.5f,
+	 0.5f,  0.5f,  0.5f,
+	-0.5f,  0.5f,  0.5f,
+	-0.5f, -0.5f,  0.5f,
+
+	-0.5f,  0.5f,  0.5f,
+	-0.5f,  0.5f, -0.5f,
+	-0.5f, -0.5f, -0.5f,
+	-0.5f, -0.5f, -0.5f,
+	-0.5f, -0.5f,  0.5f,
+	-0.5f,  0.5f,  0.5f,
+
+	 0.5f,  0.5f,  0.5f,
+	 0.5f,  0.5f, -0.5f,
+	 0.5f, -0.5f, -0.5f,
+	 0.5f, -0.5f, -0.5f,
+	 0.5f, -0.5f,  0.5f,
+	 0.5f,  0.5f,  0.5f,
+
+	-0.5f, -0.5f, -0.5f,
+	 0.5f, -0.5f, -0.5f,
+	 0.5f, -0.5f,  0.5f,
+	 0.5f, -0.5f,  0.5f,
+	-0.5f, -0.5f,  0.5f,
+	-0.5f, -0.5f, -0.5f,
+
+	-0.5f,  0.5f, -0.5f,
+	 0.5f,  0.5f, -0.5f,
+	 0.5f,  0.5f,  0.5f,
+	 0.5f,  0.5f,  0.5f,
+	-0.5f,  0.5f,  0.5f,
+	-0.5f,  0.5f, -0.5f,
+};
+
 float verticesBox[] = {
 -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
  0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -75,6 +119,7 @@ struct GenericInfo
 
 GenericInfo info{};
 ScatterGL::GLCamera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
 
 void framebuffer_resize_callback(GLFWwindow* windowPTR, int width, int height)
 {
@@ -165,6 +210,7 @@ GLFWwindow* initWindow(GenericInfo& info)
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glEnable(GL_DEPTH_TEST);
 	return window;
 }
 
@@ -177,16 +223,16 @@ int main()
 	ScatterGL::Shader cubeShader;
 	cubeShader.initialize("Shaders\\VertexShader.vert",
 							"Shaders\\FragmentShader.frag");
-	cubeShader.use();
+	//cubeShader.use();
 
 	ScatterGL::Shader lightShader;
 	lightShader.initialize("Shaders\\LightShader.vert",
 							"Shaders\\LightShader.frag");
-	//lightShader.use();
 
 	unsigned VAO; //vertex array object
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
+	//glBindVertexArray(VAO);
 
 	unsigned int EBO; //element buffer object
 	glGenBuffers(1, &EBO); 
@@ -205,14 +251,24 @@ int main()
 	glEnableVertexAttribArray(1);
 	glBindVertexArray(0);
 
+	//configue cubes Vertex Array Object and Vertex Buffer Object
+	unsigned int VBOTWO, cubeVAO;
+	glGenVertexArrays(1, &cubeVAO);
+	glGenBuffers(1, &VBOTWO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOTWO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+	glBindVertexArray(cubeVAO);
+
+	//position attribute of cube
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
 	unsigned int lightVAO;
 	glGenVertexArrays(1, &lightVAO);
 	glBindVertexArray(lightVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOTWO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glBindVertexArray(VAO);
-	glEnable(GL_DEPTH_TEST);
 	
 	while(!glfwWindowShouldClose(window))
 	{
@@ -228,36 +284,58 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//render square
-		glBindTextureUnit(0, woodTexture.texture);
-		glBindTextureUnit(1, faceTexture.texture);
+		//activating shader
+		lightShader.use();
+		lightShader.setVec3("objectColor", 1.0f, 0.5f, 0.30f);
+		lightShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
+		//render square
+		//glBindTextureUnit(0, woodTexture.texture);
+		//glBindTextureUnit(1, faceTexture.texture);
+
+		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
+			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
+		glm::mat4 view = camera.getViewMatrix();
+
+		lightShader.setMat4("projection", projection);
+		lightShader.setMat4("view", view);
 
 		glm::mat4 model = glm::mat4(1.0f);
-		glm::mat4 projection;
-		glm::mat4 view;
+		lightShader.setMat4("model", model);
 
-		projection = glm::perspective(glm::radians(camera.zoom), (float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
-		
-		int viewLoc = glGetUniformLocation(cubeShader.ID, "view");
-		int projectionLoc = glGetUniformLocation(cubeShader.ID, "projection");
-		cubeShader.setMat4("projection", projection);
+		glBindVertexArray(cubeVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-		view = camera.getViewMatrix();
-		cubeShader.setMat4("view", view);
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		//draw lamp object
+		lightShader.use();
+		lightShader.setMat4("projection", projection);
+		lightShader.setMat4("view", view);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, lightPosition);
+		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+		lightShader.setMat4("model", model);
 
-		for (unsigned int i = 0; i < 10; i++)
-		{
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			float angle = 20.0f * i;
-			if (i % 3 == 0) angle = glfwGetTime() * i * 20.0f;
-			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			cubeShader.setMat4("model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		//int viewLoc = glGetUniformLocation(cubeShader.ID, "view");
+		//int projectionLoc = glGetUniformLocation(cubeShader.ID, "projection");
+		//cubeShader.setMat4("projection", projection);
+
+		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+		//cubeShader.setMat4("view", view);
+		//glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+		//for (unsigned int i = 0; i < 10; i++)
+		//{
+		//	glm::mat4 model = glm::mat4(1.0f);
+		//	model = glm::translate(model, cubePositions[i]);
+		//	float angle = 20.0f * i;
+		//	if (i % 3 == 0) angle = glfwGetTime() * i * 20.0f;
+		//	model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+		//	cubeShader.setMat4("model", model);
+		//	glDrawArrays(GL_TRIANGLES, 0, 36);
+		//}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
