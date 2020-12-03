@@ -27,10 +27,10 @@
     <ClInclude Include="Header\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header\ScatterGLApplication.h">
+    <ClInclude Include="Header\GLCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header\GLCamera.h">
+    <ClInclude Include="Header\GLTexture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -53,9 +53,14 @@
     <ClCompile Include="Source\GLCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\GLTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\VertexShader.vert" />
     <None Include="Shaders\FragmentShader.frag" />
+    <None Include="Shaders\LightShader.vert" />
+    <None Include="Shaders\LightShader.frag" />
   </ItemGroup>
 </Project>

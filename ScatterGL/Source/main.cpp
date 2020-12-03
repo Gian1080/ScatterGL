@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "GLCamera.h"
 #include "Shader.h"
+#include "GLTexture.h"
 
 unsigned int indicesSquare[] = { 0, 1, 3, 1, 2, 3 };
 
@@ -61,7 +62,6 @@ glm::vec3(1.5f,  0.2f, -1.5f),
 glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
-
 struct GenericInfo
 {
 	const unsigned int SCREEN_WIDTH = 1575;
@@ -115,7 +115,7 @@ void processInput(GLFWwindow* window, GenericInfo& info)
 		glfwSetWindowShouldClose(window, true);
 	}
 	float cameraSpeed = 2.5f * info.deltaTime;
-	std::cout << info.deltaTime << '\n';
+	//std::cout << info.deltaTime << '\n';
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
 		camera.processKeyboard(FORWARD, info.deltaTime);
@@ -155,6 +155,7 @@ GLFWwindow* initWindow(GenericInfo& info)
 		glfwTerminate();
 	}
 	glfwMakeContextCurrent(window);
+	//glfwSwapInterval(0); If you dont want vsync
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		throw std::runtime_error("failed to initialize GLAD \n");
@@ -170,57 +171,18 @@ GLFWwindow* initWindow(GenericInfo& info)
 int main()
 {
 	GLFWwindow* window = initWindow(info);
+	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
+	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
 
-	unsigned int textureWood;
-	{
-		int width, height, nrChannels;
-		glGenTextures(1, &textureWood);
-		glBindTexture(GL_TEXTURE_2D, textureWood);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		unsigned char* data = stbi_load("Textures\\container.jpg", &width, &height, &nrChannels, 0);
-		std::cout << nrChannels << " one "  << std::endl;
-		if (data)
-		{
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-			glGenerateMipmap(GL_TEXTURE_2D);
-			std::cout << "WOOD \n";
-		}
-		else
-		{
-			std::cout << "Failed to load texture 1 \n";
-		}
-		stbi_image_free(data);
-	}
-
-	unsigned int textureFace;
-	int width, height, nrChannels;
-	glGenTextures(1, &textureFace);
-	glBindTexture(GL_TEXTURE_2D, textureFace);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	unsigned char* dataTwo = stbi_load("Textures\\awesomeface.png", &width, &height, &nrChannels, 0);
-	std::cout << nrChannels << " two " <<std::endl;
-	if (dataTwo)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataTwo);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		std::cout << "FACE \n";
-	}
-	else
-	{
-		std::cout << "Failed to load texture 2 \n";
-	}
-	stbi_image_free(dataTwo);
-	ScatterGL::Shader someShader;
-	someShader.initialize("Shaders\\VertexShader.vert",
+	ScatterGL::Shader cubeShader;
+	cubeShader.initialize("Shaders\\VertexShader.vert",
 							"Shaders\\FragmentShader.frag");
-	someShader.use();
+	cubeShader.use();
+
+	ScatterGL::Shader lightShader;
+	lightShader.initialize("Shaders\\LightShader.vert",
+							"Shaders\\LightShader.frag");
+	//lightShader.use();
 
 	unsigned VAO; //vertex array object
 	glGenVertexArrays(1, &VAO);
@@ -242,11 +204,19 @@ int main()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	glBindVertexArray(0);
-	
+
+	unsigned int lightVAO;
+	glGenVertexArrays(1, &lightVAO);
+	glBindVertexArray(lightVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(VAO);
 	glEnable(GL_DEPTH_TEST);
+	
 	while(!glfwWindowShouldClose(window))
 	{
-		//calculating time passed
+		//calculating time passed since last frame
 		float currentFrame = glfwGetTime();
 		info.deltaTime = currentFrame - info.lastFrame;
 		info.lastFrame = currentFrame;
@@ -259,8 +229,8 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//render square
-		glBindTextureUnit(0, textureWood);
-		glBindTextureUnit(1, textureFace);
+		glBindTextureUnit(0, woodTexture.texture);
+		glBindTextureUnit(1, faceTexture.texture);
 
 
 		glm::mat4 model = glm::mat4(1.0f);
@@ -269,15 +239,15 @@ int main()
 
 		projection = glm::perspective(glm::radians(camera.zoom), (float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
 		
-		int viewLoc = glGetUniformLocation(someShader.ID, "view");
-		int projectionLoc = glGetUniformLocation(someShader.ID, "projection");
-		someShader.setMat4("projection", projection);
+		int viewLoc = glGetUniformLocation(cubeShader.ID, "view");
+		int projectionLoc = glGetUniformLocation(cubeShader.ID, "projection");
+		cubeShader.setMat4("projection", projection);
 
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 		view = camera.getViewMatrix();
-		someShader.setMat4("view", view);
+		cubeShader.setMat4("view", view);
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		glBindVertexArray(VAO);
+
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
@@ -285,7 +255,7 @@ int main()
 			float angle = 20.0f * i;
 			if (i % 3 == 0) angle = glfwGetTime() * i * 20.0f;
 			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			someShader.setMat4("model", model);
+			cubeShader.setMat4("model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
@@ -297,3 +267,7 @@ int main()
 
 	glfwTerminate();
 }
+
+
+
+

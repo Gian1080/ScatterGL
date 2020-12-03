@@ -140,8 +140,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Header\GLCamera.h" />
+    <ClInclude Include="Header\GLTexture.h" />
     <ClInclude Include="Header\pch.h" />
-    <ClInclude Include="Header\ScatterGLApplication.h" />
     <ClInclude Include="Header\Shader.h" />
     <ClInclude Include="Libraries\include\glad\glad.h" />
     <ClInclude Include="Libraries\include\KHR\khrplatform.h" />
@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="Libraries\src\glad.c" />
     <ClCompile Include="Source\GLCamera.cpp" />
+    <ClCompile Include="Source\GLTexture.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\pch.cpp" />
     <ClCompile Include="Source\Shader.cpp" />
@@ -156,6 +157,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\FragmentShader.frag" />
+    <None Include="Shaders\LightShader.frag" />
+    <None Include="Shaders\LightShader.vert" />
     <None Include="Shaders\VertexShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
