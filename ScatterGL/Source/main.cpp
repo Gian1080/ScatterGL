@@ -216,6 +216,7 @@ GLFWwindow* initWindow(GenericInfo& info)
 
 int main()
 {
+	
 	GLFWwindow* window = initWindow(info);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
 	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
@@ -272,14 +273,21 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, VBOTWO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	
+	float ambientAdjuster = 0.0;
 	while(!glfwWindowShouldClose(window))
 	{
+		if (ambientAdjuster < 1.01)
+		{
+			ambientAdjuster += 0.01;
+		}
+		else if (ambientAdjuster > 1.01)
+		{
+			ambientAdjuster = 0.01;
+		}
 		//calculating time passed since last frame
 		float currentFrame = glfwGetTime();
 		info.deltaTime = currentFrame - info.lastFrame;
 		info.lastFrame = currentFrame;
-
 		// user input
 		processInput(window, info);
 
@@ -289,6 +297,7 @@ int main()
 
 		//activating shader
 		absorbCubeShader.use();
+		absorbCubeShader.setFloat("ambientStrength", ambientAdjuster);
 		absorbCubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.30f);
 		absorbCubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
