@@ -221,18 +221,21 @@ int main()
 	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
 
 	ScatterGL::Shader cubeShader;
-	cubeShader.initialize("Shaders\\VertexShader.vert",
-							"Shaders\\FragmentShader.frag");
-	//cubeShader.use();
+	cubeShader.initialize("Shaders\\CubeShader.vert",
+							"Shaders\\CubeShader.frag");
 
-	ScatterGL::Shader lightShader;
-	lightShader.initialize("Shaders\\LightShader.vert",
-							"Shaders\\LightShader.frag");
+
+	ScatterGL::Shader naturalLightShader;
+	naturalLightShader.initialize("Shaders\\NaturalLight.vert",
+							"Shaders\\NaturalLight.frag");
+
+	ScatterGL::Shader absorbCubeShader;
+	absorbCubeShader.initialize("Shaders\\AbsorbCube.vert",
+							"Shaders\\AbsorbCube.frag");
 
 	unsigned VAO; //vertex array object
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
-	//glBindVertexArray(VAO);
 
 	unsigned int EBO; //element buffer object
 	glGenBuffers(1, &EBO); 
@@ -285,9 +288,9 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//activating shader
-		lightShader.use();
-		lightShader.setVec3("objectColor", 1.0f, 0.5f, 0.30f);
-		lightShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		absorbCubeShader.use();
+		absorbCubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.30f);
+		absorbCubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 		//render square
 		//glBindTextureUnit(0, woodTexture.texture);
@@ -297,23 +300,23 @@ int main()
 			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
 		glm::mat4 view = camera.getViewMatrix();
 
-		lightShader.setMat4("projection", projection);
-		lightShader.setMat4("view", view);
+		absorbCubeShader.setMat4("projection", projection);
+		absorbCubeShader.setMat4("view", view);
 
 		glm::mat4 model = glm::mat4(1.0f);
-		lightShader.setMat4("model", model);
+		absorbCubeShader.setMat4("model", model);
 
 		glBindVertexArray(cubeVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		//draw lamp object
-		lightShader.use();
-		lightShader.setMat4("projection", projection);
-		lightShader.setMat4("view", view);
+		naturalLightShader.use();
+		naturalLightShader.setMat4("projection", projection);
+		naturalLightShader.setMat4("view", view);
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightPosition);
 		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-		lightShader.setMat4("model", model);
+		naturalLightShader.setMat4("model", model);
 
 		glBindVertexArray(lightVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);

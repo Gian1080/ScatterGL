@@ -156,10 +156,12 @@
     <ClCompile Include="Source\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\FragmentShader.frag" />
-    <None Include="Shaders\LightShader.frag" />
-    <None Include="Shaders\LightShader.vert" />
-    <None Include="Shaders\VertexShader.vert" />
+    <None Include="Shaders\AbsorbCube.frag" />
+    <None Include="Shaders\AbsorbCube.vert" />
+    <None Include="Shaders\CubeShader.frag" />
+    <None Include="Shaders\NaturalLight.frag" />
+    <None Include="Shaders\NaturalLight.vert" />
+    <None Include="Shaders\CubeShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -58,9 +58,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\VertexShader.vert" />
-    <None Include="Shaders\FragmentShader.frag" />
-    <None Include="Shaders\LightShader.vert" />
-    <None Include="Shaders\LightShader.frag" />
+    <None Include="Shaders\NaturalLight.vert" />
+    <None Include="Shaders\NaturalLight.frag" />
+    <None Include="Shaders\CubeShader.frag" />
+    <None Include="Shaders\CubeShader.vert" />
+    <None Include="Shaders\AbsorbCube.vert" />
+    <None Include="Shaders\AbsorbCube.frag" />
   </ItemGroup>
 </Project>
