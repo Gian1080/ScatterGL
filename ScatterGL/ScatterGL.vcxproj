@@ -160,8 +160,8 @@
     <ClCompile Include="Source\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\AbsorbCube.frag" />
-    <None Include="Shaders\AbsorbCube.vert" />
+    <None Include="Shaders\Material.frag" />
+    <None Include="Shaders\Material.vert" />
     <None Include="Shaders\CubeShader.frag" />
     <None Include="Shaders\NaturalLight.frag" />
     <None Include="Shaders\NaturalLight.vert" />

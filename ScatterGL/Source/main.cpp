@@ -6,52 +6,6 @@
 #include "MeshObject.h"
 #include "StaticFunction.h"
 
-std::vector<unsigned int> indicesSquare = { 0, 1, 3, 1, 2, 3 };
-
-std::vector<float> cubeVertices = {
-	-0.5f, -0.5f, -0.5f,
-	 0.5f, -0.5f, -0.5f,
-	 0.5f,  0.5f, -0.5f,
-	 0.5f,  0.5f, -0.5f,
-	-0.5f,  0.5f, -0.5f,
-	-0.5f, -0.5f, -0.5f,
-
-	-0.5f, -0.5f,  0.5f,
-	 0.5f, -0.5f,  0.5f,
-	 0.5f,  0.5f,  0.5f,
-	 0.5f,  0.5f,  0.5f,
-	-0.5f,  0.5f,  0.5f,
-	-0.5f, -0.5f,  0.5f,
-
-	-0.5f,  0.5f,  0.5f,
-	-0.5f,  0.5f, -0.5f,
-	-0.5f, -0.5f, -0.5f,
-	-0.5f, -0.5f, -0.5f,
-	-0.5f, -0.5f,  0.5f,
-	-0.5f,  0.5f,  0.5f,
-
-	 0.5f,  0.5f,  0.5f,
-	 0.5f,  0.5f, -0.5f,
-	 0.5f, -0.5f, -0.5f,
-	 0.5f, -0.5f, -0.5f,
-	 0.5f, -0.5f,  0.5f,
-	 0.5f,  0.5f,  0.5f,
-
-	-0.5f, -0.5f, -0.5f,
-	 0.5f, -0.5f, -0.5f,
-	 0.5f, -0.5f,  0.5f,
-	 0.5f, -0.5f,  0.5f,
-	-0.5f, -0.5f,  0.5f,
-	-0.5f, -0.5f, -0.5f,
-
-	-0.5f,  0.5f, -0.5f,
-	 0.5f,  0.5f, -0.5f,
-	 0.5f,  0.5f,  0.5f,
-	 0.5f,  0.5f,  0.5f,
-	-0.5f,  0.5f,  0.5f,
-	-0.5f,  0.5f, -0.5f,
-};
-
 GenericInfo info{};
 ScatterGL::GLCamera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
@@ -156,7 +110,7 @@ int main()
 {
 	
 	GLFWwindow* window = initWindow(info);
-	ScatterGL::MeshObject object(cubeVertices, 3);
+	ScatterGL::MeshObject object(verticesWithNormals, 3);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
 	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
 
@@ -169,20 +123,20 @@ int main()
 	naturalLightShader.initialize("Shaders\\NaturalLight.vert",
 							"Shaders\\NaturalLight.frag");
 
-	ScatterGL::Shader absorbCubeShader;
-	absorbCubeShader.initialize("Shaders\\AbsorbCube.vert",
-							"Shaders\\AbsorbCube.frag");
+	ScatterGL::Shader materialShader;
+	materialShader.initialize("Shaders\\Material.vert",
+							"Shaders\\Material.frag");
 
-	float ambientAdjuster = 0.0;
+	float ambientAdjuster = 0.001;
 	while(!glfwWindowShouldClose(window))
 	{
 		if (ambientAdjuster < 1.01)
 		{
-			ambientAdjuster += 0.01;
+			ambientAdjuster += 0.001;
 		}
 		else if (ambientAdjuster > 1.01)
 		{
-			ambientAdjuster = 0.01;
+			ambientAdjuster = 0.001;
 		}
 		//calculating time passed since last frame
 		float currentFrame = glfwGetTime();
@@ -196,21 +150,22 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//activating shader
-		absorbCubeShader.use();
-		absorbCubeShader.setFloat("ambientStrength", ambientAdjuster);
-		absorbCubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.30f);
-		absorbCubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		materialShader.use();
+		materialShader.setFloat("ambientStrength", ambientAdjuster);
+		materialShader.setVec3("lightPosition", lightPosition);
+		materialShader.setVec3("objectColor", 1.0f, 0.5f, 0.30f);
+		materialShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 		//render square
 		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
 			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
 		glm::mat4 view = camera.getViewMatrix();
 
-		absorbCubeShader.setMat4("projection", projection);
-		absorbCubeShader.setMat4("view", view);
+		materialShader.setMat4("projection", projection);
+		materialShader.setMat4("view", view);
 
 		glm::mat4 model = glm::mat4(1.0f);
-		absorbCubeShader.setMat4("model", model);
+		materialShader.setMat4("model", model);
 
 		object.drawObject();
 
@@ -234,15 +189,14 @@ int main()
 
 		for (unsigned int i = 0; i < 2; i++)
 		{
-			glm::mat4 modelTwo = glm::mat4(1.0f);
-			modelTwo = glm::translate(modelTwo, cubePositions[i]);
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, cubePositions[i]);
 			float angle = 20.0f * i;
 			angle = glfwGetTime() * i * 20.0f;
-			modelTwo = glm::rotate(modelTwo, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			cubeShader.setMat4("model", modelTwo);
+			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			cubeShader.setMat4("model", model);
 			object.drawObject();
 		}
-
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
