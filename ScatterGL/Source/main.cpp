@@ -149,18 +149,18 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+
 		//activating shader
 		materialShader.use();
-		materialShader.setFloat("ambientStrength", ambientAdjuster);
-		materialShader.setVec3("lightPosition", lightPosition);
 		materialShader.setVec3("objectColor", 1.0f, 0.5f, 0.30f);
 		materialShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-
+		materialShader.setVec3("lightPosition", lightPosition);
+		materialShader.setVec3("viewPosition", camera.position);
 		//render square
 		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
 			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
 		glm::mat4 view = camera.getViewMatrix();
-
 		materialShader.setMat4("projection", projection);
 		materialShader.setMat4("view", view);
 
