@@ -30,7 +30,7 @@ namespace ScatterGL
 	void MeshObject::drawObject()
 	{
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / (stride * 2));
 	}
 
 	void MeshObject::destroyObject()

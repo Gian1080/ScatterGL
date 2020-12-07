@@ -157,7 +157,7 @@ int main()
 		materialShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 		materialShader.setVec3("lightPosition", lightPosition);
 		materialShader.setVec3("viewPosition", camera.position);
-		//render square
+		//view & projection matrix calculations
 		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
 			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
 		glm::mat4 view = camera.getViewMatrix();

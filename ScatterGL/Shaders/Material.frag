@@ -1,8 +1,8 @@
 #version 460 core
 out vec4 FragColor;
 
-in vec3 Normal;
 in vec3 FragmentPosition;
+in vec3 Normal;
 
 
 uniform vec3 lightPosition;
@@ -17,6 +17,7 @@ void main()
     vec3 ambient = ambientStrength * lightColor;
 
     //diffuse lighting
+    //normalize(Normal);
     vec3 norm = normalize(Normal);
     vec3 lightDirection = normalize(lightPosition - FragmentPosition);
     float diff = max(dot(norm, lightDirection), 0.0);
