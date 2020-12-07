@@ -2,10 +2,13 @@
 #include "GLCamera.h"
 #include "Shader.h"
 #include "GLTexture.h"
+#include "TestVariables.h"
+#include "MeshObject.h"
+#include "StaticFunction.h"
 
-unsigned int indicesSquare[] = { 0, 1, 3, 1, 2, 3 };
+std::vector<unsigned int> indicesSquare = { 0, 1, 3, 1, 2, 3 };
 
-float cubeVertices[] = {
+std::vector<float> cubeVertices = {
 	-0.5f, -0.5f, -0.5f,
 	 0.5f, -0.5f, -0.5f,
 	 0.5f,  0.5f, -0.5f,
@@ -47,74 +50,6 @@ float cubeVertices[] = {
 	 0.5f,  0.5f,  0.5f,
 	-0.5f,  0.5f,  0.5f,
 	-0.5f,  0.5f, -0.5f,
-};
-
-float verticesBox[] = {
--0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
- 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
- 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
- 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
--0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
--0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
--0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
- 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
- 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
- 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
--0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
--0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
--0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
--0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
--0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
--0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
--0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
--0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
- 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
- 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
- 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
- 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
- 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
- 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
--0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
- 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
- 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
- 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
--0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
--0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
--0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
- 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
- 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
- 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
--0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
--0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-};
-
-glm::vec3 cubePositions[] = {
-glm::vec3(0.0f,  0.0f,  0.0f),
-glm::vec3(2.0f,  5.0f, -15.0f),
-glm::vec3(-1.5f, -2.2f, -2.5f),
-glm::vec3(-3.8f, -2.0f, -12.3f),
-glm::vec3(2.4f, -0.4f, -3.5f),
-glm::vec3(-1.7f,  3.0f, -7.5f),
-glm::vec3(1.3f, -2.0f, -2.5f),
-glm::vec3(1.5f,  2.0f, -2.5f),
-glm::vec3(1.5f,  0.2f, -1.5f),
-glm::vec3(-1.3f,  1.0f, -1.5f)
-};
-
-struct GenericInfo
-{
-	const unsigned int SCREEN_WIDTH = 1575;
-	const unsigned int SCREEN_HEIGHT = 675;
-	float lastX = SCREEN_WIDTH / 2.0f;
-	float lastY = SCREEN_HEIGHT / 2.0f;
-	bool firstMouse = true;
-	float deltaTime = 0.0f;
-	float lastFrame = 0.0f;
 };
 
 GenericInfo info{};
@@ -210,6 +145,9 @@ GLFWwindow* initWindow(GenericInfo& info)
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glDebugMessageCallback(ScatterGL::MessageCallback, nullptr);
 	glEnable(GL_DEPTH_TEST);
 	return window;
 }
@@ -218,6 +156,7 @@ int main()
 {
 	
 	GLFWwindow* window = initWindow(info);
+	ScatterGL::MeshObject object(cubeVertices, 3);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
 	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
 
@@ -234,45 +173,6 @@ int main()
 	absorbCubeShader.initialize("Shaders\\AbsorbCube.vert",
 							"Shaders\\AbsorbCube.frag");
 
-	unsigned VAO; //vertex array object
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	unsigned int EBO; //element buffer object
-	glGenBuffers(1, &EBO); 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesSquare), indicesSquare, GL_STATIC_DRAW);
-
-	unsigned int VBO; //vertex buffer object
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesBox), verticesBox, GL_STATIC_DRAW);
-
-	//attribute descriptor for vertices
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glBindVertexArray(0);
-
-	//configue cubes Vertex Array Object and Vertex Buffer Object
-	unsigned int VBOTWO, cubeVAO;
-	glGenVertexArrays(1, &cubeVAO);
-	glGenBuffers(1, &VBOTWO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBOTWO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-	glBindVertexArray(cubeVAO);
-
-	//position attribute of cube
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	unsigned int lightVAO;
-	glGenVertexArrays(1, &lightVAO);
-	glBindVertexArray(lightVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBOTWO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
 	float ambientAdjuster = 0.0;
 	while(!glfwWindowShouldClose(window))
 	{
@@ -302,9 +202,6 @@ int main()
 		absorbCubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 		//render square
-		//glBindTextureUnit(0, woodTexture.texture);
-		//glBindTextureUnit(1, faceTexture.texture);
-
 		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
 			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
 		glm::mat4 view = camera.getViewMatrix();
@@ -315,8 +212,7 @@ int main()
 		glm::mat4 model = glm::mat4(1.0f);
 		absorbCubeShader.setMat4("model", model);
 
-		glBindVertexArray(cubeVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		object.drawObject();
 
 		//draw lamp object
 		naturalLightShader.use();
@@ -326,34 +222,31 @@ int main()
 		model = glm::translate(model, lightPosition);
 		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 		naturalLightShader.setMat4("model", model);
+		object.drawObject();
 
-		glBindVertexArray(lightVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		cubeShader.use();
+		int viewLoc = glGetUniformLocation(cubeShader.ID, "view");
+		int projectionLoc = glGetUniformLocation(cubeShader.ID, "projection");
+		cubeShader.setMat4("projection", projection);
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+		cubeShader.setMat4("view", view);
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-		//int viewLoc = glGetUniformLocation(cubeShader.ID, "view");
-		//int projectionLoc = glGetUniformLocation(cubeShader.ID, "projection");
-		//cubeShader.setMat4("projection", projection);
-
-		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-		//cubeShader.setMat4("view", view);
-		//glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-		//for (unsigned int i = 0; i < 10; i++)
-		//{
-		//	glm::mat4 model = glm::mat4(1.0f);
-		//	model = glm::translate(model, cubePositions[i]);
-		//	float angle = 20.0f * i;
-		//	if (i % 3 == 0) angle = glfwGetTime() * i * 20.0f;
-		//	model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-		//	cubeShader.setMat4("model", model);
-		//	glDrawArrays(GL_TRIANGLES, 0, 36);
-		//}
+		for (unsigned int i = 0; i < 2; i++)
+		{
+			glm::mat4 modelTwo = glm::mat4(1.0f);
+			modelTwo = glm::translate(modelTwo, cubePositions[i]);
+			float angle = 20.0f * i;
+			angle = glfwGetTime() * i * 20.0f;
+			modelTwo = glm::rotate(modelTwo, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			cubeShader.setMat4("model", modelTwo);
+			object.drawObject();
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
+	object.destroyObject();
 
 	glfwTerminate();
 }
