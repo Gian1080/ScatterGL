@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "ScatterGLui.h"
 #include "GLCamera.h"
 #include "Shader.h"
 #include "GLTexture.h"
@@ -8,6 +9,22 @@
 
 GenericInfo info{};
 ScatterGL::GLCamera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+ScatterGL::Material cubeMaterial
+{
+	glm::vec3(1.0f, 0.5f, 0.31f),   //ambient
+	glm::vec3(0.2f, 0.7f, 0.12f),   //diffuse
+	glm::vec3(0.5f, 0.5f, 0.5f), //specular
+	8.0f							//shine
+};
+
+ScatterGL::Light sunLight
+{
+	glm::vec3(2.0f, 2.0f, 2.2f), //position
+	glm::vec3(0.1f, 0.1f, 0.1f), //ambient
+	glm::vec3(0.5f, 0.5f, 0.5f), //diffuse
+	glm::vec3(1.0f, 1.0f, 1.0f) //specular
+};
+
 glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
 
 void framebuffer_resize_callback(GLFWwindow* windowPTR, int width, int height)
@@ -74,6 +91,14 @@ void processInput(GLFWwindow* window, GenericInfo& info)
 	{
 		camera.processKeyboard(DOWN, info.deltaTime);
 	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
+	{
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+	if (glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS)
+	{
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
 }
 
 GLFWwindow* initWindow(GenericInfo& info)
@@ -108,16 +133,18 @@ GLFWwindow* initWindow(GenericInfo& info)
 
 int main()
 {
-	
 	GLFWwindow* window = initWindow(info);
-	ScatterGL::MeshObject object(verticesWithNormals, 3);
+	ScatterGL::ScatterGLui myGui;
+	myGui.innit(window);
+	
+
+	ScatterGL::MeshObject object(verticesWithNormals, 3, cubeMaterial);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
 	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
 
 	ScatterGL::Shader cubeShader;
 	cubeShader.initialize("Shaders\\CubeShader.vert",
 							"Shaders\\CubeShader.frag");
-
 
 	ScatterGL::Shader naturalLightShader;
 	naturalLightShader.initialize("Shaders\\NaturalLight.vert",
@@ -126,36 +153,32 @@ int main()
 	ScatterGL::Shader materialShader;
 	materialShader.initialize("Shaders\\Material.vert",
 							"Shaders\\Material.frag");
-
-	float ambientAdjuster = 0.001;
+	bool waar = true;
+	
 	while(!glfwWindowShouldClose(window))
 	{
-		if (ambientAdjuster < 1.01)
-		{
-			ambientAdjuster += 0.001;
-		}
-		else if (ambientAdjuster > 1.01)
-		{
-			ambientAdjuster = 0.001;
-		}
 		//calculating time passed since last frame
 		float currentFrame = glfwGetTime();
 		info.deltaTime = currentFrame - info.lastFrame;
 		info.lastFrame = currentFrame;
 		// user input
 		processInput(window, info);
-
 		// render
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-
 		//activating shader
 		materialShader.use();
-		materialShader.setVec3("objectColor", 1.0f, 0.5f, 0.30f);
-		materialShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-		materialShader.setVec3("lightPosition", lightPosition);
+		//setting material properties
+		materialShader.setVec3("material.ambient", object.material.ambient);
+		materialShader.setVec3("material.diffuse", object.material.diffuse);
+		materialShader.setVec3("material.specular", object.material.specular);
+		materialShader.setFloat("material.shine", object.material.shine);
+
+		materialShader.setVec3("light.position", sunLight.position);
+		materialShader.setVec3("light.ambient", sunLight.ambient);
+		materialShader.setVec3("light.diffuse", sunLight.diffuse);
+		materialShader.setVec3("light.specular", sunLight.specular);
+
 		materialShader.setVec3("viewPosition", camera.position);
 		//view & projection matrix calculations
 		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
@@ -174,7 +197,7 @@ int main()
 		naturalLightShader.setMat4("projection", projection);
 		naturalLightShader.setMat4("view", view);
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, lightPosition);
+		model = glm::translate(model, sunLight.position);
 		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 		naturalLightShader.setMat4("model", model);
 		object.drawObject();
@@ -195,13 +218,16 @@ int main()
 			angle = glfwGetTime() * i * 20.0f;
 			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 			cubeShader.setMat4("model", model);
-			object.drawObject();
 		}
+		object.drawObject();
+
+		myGui.drawGui();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+	myGui.destroy();
+	//Destroying objects
 	object.destroyObject();
-
 	glfwTerminate();
 }
 

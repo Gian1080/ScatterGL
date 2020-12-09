@@ -9,13 +9,13 @@
 
 namespace ScatterGL
 {
-	MeshObject::MeshObject(std::vector<float>& verticesTMP, uint8_t strideTMP) :
-		vertices(verticesTMP),
-		stride(strideTMP)
+	MeshObject::MeshObject(std::vector<float>& verticesREF, uint8_t strideTMP, Material& materialREF) :
+		vertices(verticesREF),
+		stride(strideTMP),
+		material(materialREF)
 	{
 		glGenVertexArrays(1, &VAO);
 		glBindVertexArray(VAO);
-		//indices object
 		//vertex buffer object
 		glGenBuffers(1, &VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
