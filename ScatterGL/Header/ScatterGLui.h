@@ -7,10 +7,9 @@ namespace ScatterGL
 class ScatterGLui
 {
 public:
-	void innit(GLFWwindow* window);
+	void init(GLFWwindow* window);
 	void destroy();
 	void drawGui();
-
 private:
 	GLFWwindow* window;
 	ImVec4 clear_color;

@@ -9,7 +9,7 @@ namespace ScatterGL
 class MeshObject
 {
 public:
-	MeshObject(std::vector<float>& verticesTMP, uint8_t strideTMP, Material& materialREF);
+	MeshObject(std::vector<float>& verticesTMP, Material& materialREF);
 
 	void drawObject();
 	void destroyObject();
@@ -19,7 +19,6 @@ public:
 private:
 	std::vector<float> vertices;
 	unsigned int VAO, VBO, EBO;
-	uint8_t stride;
 	const void* vertDataSize;
 };
 }

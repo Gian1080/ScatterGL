@@ -2,7 +2,7 @@
 
 namespace ScatterGL
 {
-	void ScatterGLui::innit(GLFWwindow* window)
+	void ScatterGLui::init(GLFWwindow* window)
 	{
 		const char* glsl_version = "#version 150";
 		IMGUI_CHECKVERSION();

@@ -50,7 +50,7 @@ public:
 	//constructor with vectors
 	GLCamera(glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f),
-		float Yaw = YAW, float Pitch = PITCH):
+		float Yaw = YAW, float Pitch = PITCH) :
 
 		front(glm::vec3(0.0f, 0.0f, -1.0f)),
 		movementSpeed(SPEED),

@@ -8,13 +8,23 @@
 #include "StaticFunction.h"
 
 GenericInfo info{};
-ScatterGL::GLCamera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+ScatterGL::GLCamera camera(glm::vec3(0.0f, 1.0f, 5.0f));
+
+
 ScatterGL::Material cubeMaterial
 {
 	glm::vec3(1.0f, 0.5f, 0.31f),   //ambient
 	glm::vec3(0.2f, 0.7f, 0.12f),   //diffuse
-	glm::vec3(0.5f, 0.5f, 0.5f), //specular
+	glm::vec3(0.5f, 0.5f, 0.5f),    //specular
 	8.0f							//shine
+};
+
+ScatterGL::Material surfaceMaterial
+{
+	glm::vec3(1.0f, 1.0f, 1.0f),   //ambient
+	glm::vec3(1.0f, 1.0f, 1.0f),   //diffuse
+	glm::vec3(0.0f, 0.0f, 0.0f),    //specular
+	2.0f							//shine
 };
 
 ScatterGL::Light sunLight
@@ -66,7 +76,6 @@ void processInput(GLFWwindow* window, GenericInfo& info)
 		glfwSetWindowShouldClose(window, true);
 	}
 	float cameraSpeed = 2.5f * info.deltaTime;
-	//std::cout << info.deltaTime << '\n';
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
 		camera.processKeyboard(FORWARD, info.deltaTime);
@@ -133,14 +142,19 @@ GLFWwindow* initWindow(GenericInfo& info)
 
 int main()
 {
+
 	GLFWwindow* window = initWindow(info);
 	ScatterGL::ScatterGLui myGui;
-	myGui.innit(window);
+	myGui.init(window);
 	
-
-	ScatterGL::MeshObject object(verticesWithNormals, 3, cubeMaterial);
+	ScatterGL::MeshObject object(diffusedVertices, cubeMaterial);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
+	
+	ScatterGL::MeshObject surface(flatSurface, surfaceMaterial);
 	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
+
+	ScatterGL::GLTexture boxTexture("Textures\\container2.png");
+	ScatterGL::GLTexture specularBoxTexture("Textures\\container2_specular.png");
 
 	ScatterGL::Shader cubeShader;
 	cubeShader.initialize("Shaders\\CubeShader.vert",
@@ -153,7 +167,6 @@ int main()
 	ScatterGL::Shader materialShader;
 	materialShader.initialize("Shaders\\Material.vert",
 							"Shaders\\Material.frag");
-	bool waar = true;
 	
 	while(!glfwWindowShouldClose(window))
 	{
@@ -168,10 +181,40 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//activating shader
 		materialShader.use();
+
+		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
+			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
+		glm::mat4 view = camera.getViewMatrix();
+		materialShader.setMat4("projection", projection);
+		materialShader.setMat4("view", view);
+
+		//setting surface test things
+		materialShader.setInt("material.diffuse", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, boxTexture.texture);
+		materialShader.setInt("material.specular", 1);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specularBoxTexture.texture);
+		materialShader.setVec3("material.ambient", surface.material.ambient);
+		materialShader.setFloat("material.shine", surface.material.shine);
+		
+		materialShader.setVec3("light.position", sunLight.position);
+		materialShader.setVec3("light.ambient", sunLight.ambient);
+		materialShader.setVec3("light.diffuse", sunLight.diffuse);
+		materialShader.setVec3("light.specular", sunLight.specular);
+		materialShader.setVec3("viewPosition", camera.position);
+		glm::mat4 testModel = glm::mat4(1.0f);
+		testModel = glm::translate(testModel, glm::vec3(0.0f, 0.0f, 0.0f));
+		testModel = glm::scale(testModel, glm::vec3(10.0f, 1.0f, 10.0f));
+		materialShader.setMat4("model", testModel);
+		surface.drawObject();
+		glBindTexture(GL_TEXTURE_2D, 0);
+
 		//setting material properties
+		materialShader.setInt("material.diffuse", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, woodTexture.texture);
 		materialShader.setVec3("material.ambient", object.material.ambient);
-		materialShader.setVec3("material.diffuse", object.material.diffuse);
-		materialShader.setVec3("material.specular", object.material.specular);
 		materialShader.setFloat("material.shine", object.material.shine);
 
 		materialShader.setVec3("light.position", sunLight.position);
@@ -181,19 +224,17 @@ int main()
 
 		materialShader.setVec3("viewPosition", camera.position);
 		//view & projection matrix calculations
-		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
-			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
-		glm::mat4 view = camera.getViewMatrix();
-		materialShader.setMat4("projection", projection);
-		materialShader.setMat4("view", view);
+
 
 		glm::mat4 model = glm::mat4(1.0f);
 		materialShader.setMat4("model", model);
-
 		object.drawObject();
+
+
 
 		//draw lamp object
 		naturalLightShader.use();
+
 		naturalLightShader.setMat4("projection", projection);
 		naturalLightShader.setMat4("view", view);
 		model = glm::mat4(1.0f);
