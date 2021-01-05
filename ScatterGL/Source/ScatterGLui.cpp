@@ -25,13 +25,11 @@ namespace ScatterGL
 
 	void ScatterGLui::drawGui()
 	{
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+
 		static float f = 0.0f;
 		static int counter = 0;
 
-		ImGui::Begin("ScatterGL");                          // Create a window called "Hello, world!" and append into it.
+		ImGui::Begin("ScatterGL");                          // Create a window called "ScatterGL" and append into it.
 
 		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 		ImGui::Checkbox("Demo Window", &checkBox);      // Edit bools storing our window open/close state
@@ -47,7 +45,28 @@ namespace ScatterGL
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::End();
+
+	}
+
+	void ScatterGLui::drawDirectionalLight(DirectionalLight& light)
+	{
+		ImGui::Begin("DirectionalLightValue");
+		ImGui::Text("Slider to adjust light");
+		ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.01f, -1.0f, 1.0f, "%.2f");
+		ImGui::End();
+	}
+
+	void ScatterGLui::beginFrameGui()
+	{
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+	}
+
+	void ScatterGLui::endFrameGui()
+	{
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
+
 }

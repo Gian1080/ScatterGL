@@ -33,7 +33,10 @@ namespace ScatterGL
 			if (pitch < -89.0f) pitch = -89.0f;
 			
 		}
-		GLCamera::updateCameraVectors();
+		if (!mouseForMenu)
+		{
+			GLCamera::updateCameraVectors();
+		}
 	}
 
 	void GLCamera::processMouseScroll(float yOffset)

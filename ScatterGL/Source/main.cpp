@@ -6,6 +6,7 @@
 #include "TestVariables.h"
 #include "MeshObject.h"
 #include "StaticFunction.h"
+#include "Mesh.h"
 
 GenericInfo info{};
 ScatterGL::GLCamera camera(glm::vec3(0.0f, 1.0f, 5.0f));
@@ -27,9 +28,9 @@ ScatterGL::Material surfaceMaterial
 	2.0f							//shine
 };
 
-ScatterGL::Light sunLight
+ScatterGL::DirectionalLight sunLight
 {
-	glm::vec3(2.0f, 2.0f, 2.2f), //position
+	glm::vec3(-0.2f, -1.0f, -0.3f), //direction
 	glm::vec3(0.1f, 0.1f, 0.1f), //ambient
 	glm::vec3(0.5f, 0.5f, 0.5f), //diffuse
 	glm::vec3(1.0f, 1.0f, 1.0f) //specular
@@ -102,10 +103,12 @@ void processInput(GLFWwindow* window, GenericInfo& info)
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
 	{
+		camera.mouseForMenu = true;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 	if (glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS)
 	{
+		camera.mouseForMenu = false;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 }
@@ -142,15 +145,15 @@ GLFWwindow* initWindow(GenericInfo& info)
 
 int main()
 {
-
+	srand(static_cast <unsigned> (time(0)));
 	GLFWwindow* window = initWindow(info);
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
 	
-	ScatterGL::MeshObject object(diffusedVertices, cubeMaterial);
+	ScatterGL::MeshObject cubeObject(cube, cubeIndices, cubeMaterial);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
 	
-	ScatterGL::MeshObject surface(flatSurface, surfaceMaterial);
+	ScatterGL::MeshObject surface(flatSurface, flatIndices, surfaceMaterial);
 	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
 
 	ScatterGL::GLTexture boxTexture("Textures\\container2.png");
@@ -167,7 +170,19 @@ int main()
 	ScatterGL::Shader materialShader;
 	materialShader.initialize("Shaders\\Material.vert",
 							"Shaders\\Material.frag");
+
+	ScatterGL::Shader testShader;
+	testShader.initialize("Shaders\\TestShader.vert",
+		"Shaders\\TestShader.frag");
 	
+	cubeShader.use();
+	float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	cubeShader.setFloat("r", r);
+	float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	cubeShader.setFloat("g", g);
+	float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	cubeShader.setFloat("b", b);
+
 	while(!glfwWindowShouldClose(window))
 	{
 		//calculating time passed since last frame
@@ -198,7 +213,7 @@ int main()
 		materialShader.setVec3("material.ambient", surface.material.ambient);
 		materialShader.setFloat("material.shine", surface.material.shine);
 		
-		materialShader.setVec3("light.position", sunLight.position);
+		materialShader.setVec3("light.direction", sunLight.direction);
 		materialShader.setVec3("light.ambient", sunLight.ambient);
 		materialShader.setVec3("light.diffuse", sunLight.diffuse);
 		materialShader.setVec3("light.specular", sunLight.specular);
@@ -214,61 +229,76 @@ int main()
 		materialShader.setInt("material.diffuse", 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, woodTexture.texture);
-		materialShader.setVec3("material.ambient", object.material.ambient);
-		materialShader.setFloat("material.shine", object.material.shine);
+		materialShader.setVec3("material.ambient", cubeObject.material.ambient);
+		materialShader.setFloat("material.shine", cubeObject.material.shine);
 
-		materialShader.setVec3("light.position", sunLight.position);
+		materialShader.setVec3("light.position", sunLight.direction);
 		materialShader.setVec3("light.ambient", sunLight.ambient);
 		materialShader.setVec3("light.diffuse", sunLight.diffuse);
 		materialShader.setVec3("light.specular", sunLight.specular);
 
 		materialShader.setVec3("viewPosition", camera.position);
+
 		//view & projection matrix calculations
-
-
 		glm::mat4 model = glm::mat4(1.0f);
 		materialShader.setMat4("model", model);
-		object.drawObject();
+		cubeObject.drawObject();
 
 
 
 		//draw lamp object
 		naturalLightShader.use();
-
+		naturalLightShader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
 		naturalLightShader.setMat4("projection", projection);
 		naturalLightShader.setMat4("view", view);
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, sunLight.position);
+		model = glm::translate(model, sunLight.direction);
 		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 		naturalLightShader.setMat4("model", model);
-		object.drawObject();
+		cubeObject.drawObject();
 
-		cubeShader.use();
-		int viewLoc = glGetUniformLocation(cubeShader.ID, "view");
-		int projectionLoc = glGetUniformLocation(cubeShader.ID, "projection");
-		cubeShader.setMat4("projection", projection);
+		testShader.use();
+		testShader.setInt("material.diffuse", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, boxTexture.texture);
+		testShader.setInt("material.specular", 1);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specularBoxTexture.texture);
+		testShader.setVec3("material.ambient", surface.material.ambient);
+		testShader.setFloat("material.shine", surface.material.shine);
+
+		testShader.setVec3("light.direction", sunLight.direction);
+		testShader.setVec3("light.ambient", sunLight.ambient);
+		testShader.setVec3("light.diffuse", sunLight.diffuse);
+		testShader.setVec3("light.specular", sunLight.specular);
+		testShader.setVec3("viewPosition", camera.position);
+		int viewLoc = glGetUniformLocation(testShader.ID, "view");
+		int projectionLoc = glGetUniformLocation(testShader.ID, "projection");
+		testShader.setMat4("projection", projection);
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-		cubeShader.setMat4("view", view);
+		testShader.setMat4("view", view);
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-		for (unsigned int i = 0; i < 2; i++)
+
+		for (unsigned int i = 0; i < 5; i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			float angle = 20.0f * i;
 			angle = glfwGetTime() * i * 20.0f;
 			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			cubeShader.setMat4("model", model);
+			testShader.setMat4("model", model);
+			cubeObject.drawObject();
 		}
-		object.drawObject();
-
+		myGui.beginFrameGui();
 		myGui.drawGui();
+		myGui.drawDirectionalLight(sunLight);
+		myGui.endFrameGui();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 	myGui.destroy();
-	//Destroying objects
-	object.destroyObject();
+	cubeObject.destroyObject();
 	glfwTerminate();
 }
 

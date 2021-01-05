@@ -2,8 +2,9 @@
 
 namespace ScatterGL
 {
-MeshObject::MeshObject(std::vector<float>& verticesREF, Material& materialREF) :
+MeshObject::MeshObject(std::vector<float>& verticesREF, std::vector<GLuint>& indicesREF, Material& materialREF) :
 	vertices(verticesREF),
+	indices(indicesREF),
 	material(materialREF)
 {
 	glGenVertexArrays(1, &this->VAO);
@@ -12,6 +13,10 @@ MeshObject::MeshObject(std::vector<float>& verticesREF, Material& materialREF) :
 	glGenBuffers(1, &this->VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+	//Element Buffer
+	glGenBuffers(1, &this->EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 	//vertex descriptor
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -24,7 +29,7 @@ MeshObject::MeshObject(std::vector<float>& verticesREF, Material& materialREF) :
 void MeshObject::drawObject()
 {
 	glBindVertexArray(this->VAO);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
 }
 
 void MeshObject::destroyObject()

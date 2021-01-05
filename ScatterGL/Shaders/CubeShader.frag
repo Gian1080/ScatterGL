@@ -7,7 +7,12 @@ in vec2 texCoord;
 
 out vec4 FragColor;
 
+uniform float r;
+uniform float g;
+uniform float b;
+
 void main()
 {
-	FragColor = mix(texture(textureOne, texCoord), texture(textureTwo, texCoord), 0.2);
+	//mix(texture(textureOne, texCoord), texture(textureTwo, texCoord), 0.2);
+	FragColor = vec4(r, g, b, 1.0f);
 }

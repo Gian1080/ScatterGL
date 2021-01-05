@@ -9,7 +9,7 @@ namespace ScatterGL
 class MeshObject
 {
 public:
-	MeshObject(std::vector<float>& verticesTMP, Material& materialREF);
+	MeshObject(std::vector<float>& verticesTMP, std::vector<GLuint>& indicesREF, Material& materialREF);
 
 	void drawObject();
 	void destroyObject();
@@ -18,6 +18,7 @@ public:
 
 private:
 	std::vector<float> vertices;
+	std::vector<GLuint> indices;
 	unsigned int VAO, VBO, EBO;
 	const void* vertDataSize;
 };
