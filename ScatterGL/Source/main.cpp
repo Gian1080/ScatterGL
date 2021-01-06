@@ -211,7 +211,12 @@ int main()
 		backpackModel = glm::scale(backpackModel, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
 		//model render part
 		modelShader.use();
+		modelShader.setMat4("projection", projection);
+		modelShader.setMat4("view", view);
+		backpackModel = glm::translate(backpackModel, glm::vec3(10.0f, 10.0f, 10.0f));
 		modelShader.setMat4("model", backpackModel);
+		
+
 		backpack.draw(modelShader);
 
 
