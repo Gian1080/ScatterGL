@@ -100,6 +100,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>Z:\ScatterGL\ScatterGL\Libraries;Z:\ScatterGL\ScatterGL\Header;Z:\ScatterGL\ScatterGL\Libraries\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,6 +145,7 @@
     <ClInclude Include="Header\GLTexture.h" />
     <ClInclude Include="Header\Mesh.h" />
     <ClInclude Include="Header\MeshObject.h" />
+    <ClInclude Include="Header\Model.h" />
     <ClInclude Include="Header\pch.h" />
     <ClInclude Include="Header\ScatterGLui.h" />
     <ClInclude Include="Header\Shader.h" />
@@ -159,6 +161,7 @@
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Mesh.cpp" />
     <ClCompile Include="Source\MeshObject.cpp" />
+    <ClCompile Include="Source\Model.cpp" />
     <ClCompile Include="Source\pch.cpp" />
     <ClCompile Include="Source\ScatterGLui.cpp" />
     <ClCompile Include="Source\Shader.cpp" />

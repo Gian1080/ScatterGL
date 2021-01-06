@@ -7,6 +7,7 @@
 #include "MeshObject.h"
 #include "StaticFunction.h"
 #include "Mesh.h"
+#include "Model.h"
 
 GenericInfo info{};
 ScatterGL::GLCamera camera(glm::vec3(0.0f, 1.0f, 5.0f));
@@ -146,6 +147,7 @@ GLFWwindow* initWindow(GenericInfo& info)
 int main()
 {
 	srand(static_cast <unsigned> (time(0)));
+	stbi_set_flip_vertically_on_load(true);
 	GLFWwindow* window = initWindow(info);
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
@@ -175,6 +177,12 @@ int main()
 	testShader.initialize("Shaders\\TestShader.vert",
 		"Shaders\\TestShader.frag");
 	
+	ScatterGL::Shader modelShader;
+	modelShader.initialize("Shaders\\modelShader.vert",
+		"Shaders\\modelShader.frag");
+	std::filesystem::path pathName("Z:\\ScatterGL\\ScatterGL\\Models\\backpack\\backpack.obj");
+	ScatterGL::Model backpack(pathName.string());
+
 	cubeShader.use();
 	float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 	cubeShader.setFloat("r", r);
@@ -194,12 +202,25 @@ int main()
 		// render
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//activating shader
-		materialShader.use();
-
+		// setting projection and view matrix
 		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
 			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
 		glm::mat4 view = camera.getViewMatrix();
+		glm::mat4 backpackModel = glm::mat4(1.0f);
+		backpackModel = glm::translate(backpackModel, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+		backpackModel = glm::scale(backpackModel, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+		//model render part
+		modelShader.use();
+		modelShader.setMat4("model", backpackModel);
+		backpack.draw(modelShader);
+
+
+
+
+
+		//activating shader
+		materialShader.use();
+
 		materialShader.setMat4("projection", projection);
 		materialShader.setMat4("view", view);
 
