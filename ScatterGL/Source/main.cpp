@@ -147,7 +147,7 @@ GLFWwindow* initWindow(GenericInfo& info)
 int main()
 {
 	srand(static_cast <unsigned> (time(0)));
-	stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(false);
 	GLFWwindow* window = initWindow(info);
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
@@ -155,11 +155,11 @@ int main()
 	ScatterGL::MeshObject cubeObject(cube, cubeIndices, cubeMaterial);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
 	
-	ScatterGL::MeshObject surface(flatSurface, flatIndices, surfaceMaterial);
-	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
-
 	ScatterGL::GLTexture boxTexture("Textures\\container2.png");
 	ScatterGL::GLTexture specularBoxTexture("Textures\\container2_specular.png");
+
+	ScatterGL::MeshObject surface(flatSurface, flatIndices, surfaceMaterial);
+	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
 
 	ScatterGL::Shader cubeShader;
 	cubeShader.initialize("Shaders\\CubeShader.vert",
@@ -180,7 +180,7 @@ int main()
 	ScatterGL::Shader modelShader;
 	modelShader.initialize("Shaders\\modelShader.vert",
 		"Shaders\\modelShader.frag");
-	std::filesystem::path pathName("Z:\\ScatterGL\\ScatterGL\\Models\\backpack\\backpack.obj");
+	std::filesystem::path pathName("Z:\\ScatterGL\\ScatterGL\\Models\\sponzaTwo\\sponza.gltf");
 	ScatterGL::Model backpack(pathName.string());
 
 	cubeShader.use();
@@ -204,7 +204,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// setting projection and view matrix
 		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
-			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 512.0f);
+			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, 0.1f, 10000.0f);
 		glm::mat4 view = camera.getViewMatrix();
 		glm::mat4 backpackModel = glm::mat4(1.0f);
 		backpackModel = glm::translate(backpackModel, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
@@ -213,7 +213,8 @@ int main()
 		modelShader.use();
 		modelShader.setMat4("projection", projection);
 		modelShader.setMat4("view", view);
-		backpackModel = glm::translate(backpackModel, glm::vec3(10.0f, 10.0f, 10.0f));
+		backpackModel = glm::translate(backpackModel, glm::vec3(1.0f, 1.0f, 1.0f));
+		backpackModel = glm::scale(backpackModel, glm::vec3(0.05f, 0.05f, 0.05f));
 		modelShader.setMat4("model", backpackModel);
 		
 

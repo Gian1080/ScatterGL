@@ -13,6 +13,7 @@ public:
 	Model(std::string pathName)
 	{
 		loadModel(pathName);
+		std::cout << pathName << " in constructor \n";
 	}
 
 	void draw(Shader& shader);

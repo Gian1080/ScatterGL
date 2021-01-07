@@ -27,14 +27,17 @@ namespace ScatterGL
 
 	void Model::processNode(aiNode* node, const aiScene* scene)
 	{
+		std::cout << "in processNode \n";
 		for (unsigned int i = 0; i < node->mNumMeshes; i++)
 		{
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 			meshes.push_back(processMesh(mesh, scene));
+			std::cout << "for loop mesh pushback \n";
 		}
 		for (unsigned int i = 0; i < node->mNumChildren; i++)
 		{
 			processNode(node->mChildren[i], scene);
+			std::cout << "processNode for loop \n";
 		}
 	}
 
@@ -133,7 +136,8 @@ namespace ScatterGL
 	{
 		//std::string(pathName);
 		std::string fileName;
-		fileName = "Z:\\ScatterGL\\ScatterGL\\Models\\backpack\\" + std::string(pathName);
+		std::cout << pathName << '\n';
+		fileName = "Z:\\ScatterGL\\ScatterGL\\Models\\sponzaTwo\\" + std::string(pathName);
 
 		unsigned int textureID;
 		glGenTextures(1, &textureID);
