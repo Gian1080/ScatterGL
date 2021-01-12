@@ -8,8 +8,10 @@
 #include "StaticFunction.h"
 #include "Mesh.h"
 #include "Model.h"
+#include "Framebuffer.h"
 
-GenericInfo info{};
+ScatterGL::GenericInfo info{};
+ScatterGL::Framebuffer framebuffer;
 ScatterGL::GLCamera camera(glm::vec3(0.0f, 1.0f, 5.0f));
 float nearPlane = 0.1f;
 float farPlane = 10000.0f;
@@ -72,7 +74,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window, GenericInfo& info)
+void processInput(GLFWwindow* window, ScatterGL::GenericInfo& info)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
@@ -115,7 +117,7 @@ void processInput(GLFWwindow* window, GenericInfo& info)
 	}
 }
 
-GLFWwindow* initWindow(GenericInfo& info)
+GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -133,6 +135,8 @@ GLFWwindow* initWindow(GenericInfo& info)
 	{
 		throw std::runtime_error("failed to initialize GLAD \n");
 	}
+	
+	
 	glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -142,17 +146,21 @@ GLFWwindow* initWindow(GenericInfo& info)
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(ScatterGL::MessageCallback, nullptr);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glfwMaximizeWindow(window);
 	return window;
 }
 
 int main()
 {
+	
 	srand(static_cast <unsigned> (time(0)));
 	stbi_set_flip_vertically_on_load(false);
 	GLFWwindow* window = initWindow(info);
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
-	
+	framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	ScatterGL::MeshObject cubeObject(cube, cubeIndices, cubeMaterial);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
 	
@@ -208,6 +216,11 @@ int main()
 		processInput(window, info);
 		// render
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		int w, h;
+		glfwGetFramebufferSize(window, &w, &h);
+		framebuffer.resizeFramebuffer(w, h);
+		framebuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// setting projection and view matrix
 		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
@@ -319,9 +332,13 @@ int main()
 		//	testShader.setMat4("model", model);
 		//	cubeObject.drawObject();
 		//}
+		framebuffer.unbind();
+		
 		myGui.beginFrameGui();
 		myGui.drawGui();
 		myGui.drawDirectionalLight(sunLight);
+		
+		myGui.drawScene(framebuffer);
 		myGui.endFrameGui();
 		glfwSwapBuffers(window);
 		glfwPollEvents();

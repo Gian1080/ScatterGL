@@ -56,6 +56,14 @@ namespace ScatterGL
 		ImGui::End();
 	}
 
+	void ScatterGLui::drawScene(ScatterGL::Framebuffer& framebuffer)
+	{
+		ImGui::Begin("Scene");
+		ImVec2 screen = ImGui::GetContentRegionAvail();
+		ImGui::Image((void*)(intptr_t)framebuffer.texture, screen, ImVec2(0, 1), ImVec2(1, 0));
+		ImGui::End();
+	}
+
 	void ScatterGLui::beginFrameGui()
 	{
 		ImGui_ImplOpenGL3_NewFrame();

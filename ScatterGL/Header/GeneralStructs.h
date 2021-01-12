@@ -3,6 +3,16 @@
 
 namespace ScatterGL
 {
+struct GenericInfo
+{
+	const unsigned int SCREEN_WIDTH = 1920;
+	const unsigned int SCREEN_HEIGHT = 1080;
+	float lastX = SCREEN_WIDTH / 2.0f;
+	float lastY = SCREEN_HEIGHT / 2.0f;
+	bool firstMouse = true;
+	float deltaTime = 0.0f;
+	float lastFrame = 0.0f;
+};
 
 struct Material
 {

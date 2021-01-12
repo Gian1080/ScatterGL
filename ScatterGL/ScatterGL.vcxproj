@@ -140,6 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Header\Framebuffer.h" />
     <ClInclude Include="Header\GeneralStructs.h" />
     <ClInclude Include="Header\GLCamera.h" />
     <ClInclude Include="Header\GLTexture.h" />
@@ -156,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\src\glad.c" />
+    <ClCompile Include="Source\Framebuffer.cpp" />
     <ClCompile Include="Source\GLCamera.cpp" />
     <ClCompile Include="Source\GLTexture.cpp" />
     <ClCompile Include="Source\main.cpp" />

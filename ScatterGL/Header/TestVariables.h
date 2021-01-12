@@ -212,13 +212,3 @@ std::vector<float> verticesWithNormals = {
     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 };
 
-struct GenericInfo
-{
-	const unsigned int SCREEN_WIDTH = 1575;
-	const unsigned int SCREEN_HEIGHT = 675;
-	float lastX = SCREEN_WIDTH / 2.0f;
-	float lastY = SCREEN_HEIGHT / 2.0f;
-	bool firstMouse = true;
-	float deltaTime = 0.0f;
-	float lastFrame = 0.0f;
-};
