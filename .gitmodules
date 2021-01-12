@@ -1,0 +1,3 @@
+[submodule "ScatterGL/Libraries/Scatter"]
+	path = ScatterGL/Libraries/Scatter
+	url = https://github.com/nicovanbentum/Scatter.git
