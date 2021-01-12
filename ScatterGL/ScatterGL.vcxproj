@@ -99,12 +99,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>Z:\ScatterGL\ScatterGL\Libraries;Z:\ScatterGL\ScatterGL\Header;Z:\ScatterGL\ScatterGL\Libraries\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Z:\ScatterGL\ScatterGL\Libraries;Z:\ScatterGL\ScatterGL\Header;Z:\ScatterGL\ScatterGL\Libraries\Scatter\header;Z:\ScatterGL\ScatterGL\Libraries\include;%VULKAN_SDK%\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>Z:\ScatterGL\ScatterGL\Libraries\Scatter\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Scatter.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/NODEFAULTLIB:library %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -140,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Header\bewaar.h" />
     <ClInclude Include="Header\Framebuffer.h" />
     <ClInclude Include="Header\GeneralStructs.h" />
     <ClInclude Include="Header\GLCamera.h" />
