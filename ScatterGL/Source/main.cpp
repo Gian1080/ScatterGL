@@ -189,7 +189,7 @@ int main()
 	ScatterGL::Shader modelShader;
 	modelShader.initialize("Shaders\\modelShader.vert",
 		"Shaders\\modelShader.frag");
-	std::filesystem::path pathName("Z:\\ScatterGL\\ScatterGL\\Models\\sponzaTwo\\sponza.gltf");
+	std::filesystem::path pathName("Models\\sponzaTwo\\sponza.gltf");
 	ScatterGL::Model sponza(pathName.string());
 
 	ScatterGL::Shader depthShader;
