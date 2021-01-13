@@ -9,6 +9,7 @@
 #include "Mesh.h"
 #include "Model.h"
 #include "Framebuffer.h"
+#include "Scatter.h"
 
 ScatterGL::GenericInfo info{};
 ScatterGL::Framebuffer framebuffer;
@@ -135,20 +136,18 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 	{
 		throw std::runtime_error("failed to initialize GLAD \n");
 	}
-	
-	
-	glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+	glfwMaximizeWindow(window);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(ScatterGL::MessageCallback, nullptr);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-	glfwMaximizeWindow(window);
 	return window;
 }
 
@@ -160,6 +159,8 @@ int main()
 	GLFWwindow* window = initWindow(info);
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
+	scatter::Scatter myScatter;
+	myScatter.init();
 	framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	ScatterGL::MeshObject cubeObject(cube, cubeIndices, cubeMaterial);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
@@ -205,7 +206,8 @@ int main()
 	cubeShader.setFloat("g", g);
 	float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 	cubeShader.setFloat("b", b);
-
+	glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
+		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, nearPlane, farPlane);
 	while(!glfwWindowShouldClose(window))
 	{
 		//calculating time passed since last frame
@@ -224,19 +226,17 @@ int main()
 		framebuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// setting projection and view matrix
-		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
-			(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, nearPlane, farPlane);
 		glm::mat4 view = camera.getViewMatrix();
-		glm::mat4 backpackModel = glm::mat4(1.0f);
-		backpackModel = glm::translate(backpackModel, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		backpackModel = glm::scale(backpackModel, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+		glm::mat4 identityMatrix = glm::mat4(1.0f);
+		identityMatrix = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+		identityMatrix = glm::scale(identityMatrix, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
 		//model render part
 		modelShader.use();
 		modelShader.setMat4("projection", projection);
 		modelShader.setMat4("view", view);
-		backpackModel = glm::translate(backpackModel, glm::vec3(1.0f, 1.0f, 1.0f));
-		backpackModel = glm::scale(backpackModel, glm::vec3(0.05f, 0.05f, 0.05f));
-		modelShader.setMat4("model", backpackModel);
+		identityMatrix = glm::translate(identityMatrix, glm::vec3(1.0f, 1.0f, 1.0f));
+		identityMatrix = glm::scale(identityMatrix, glm::vec3(0.05f, 0.05f, 0.05f));
+		modelShader.setMat4("model", identityMatrix);
 		
 		sponza.draw(modelShader);
 		framebuffer.unbind();
