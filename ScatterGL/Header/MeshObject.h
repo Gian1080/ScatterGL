@@ -10,7 +10,6 @@ class MeshObject
 {
 public:
 	MeshObject(std::vector<float>& verticesTMP, std::vector<GLuint>& indicesREF, Material& materialREF);
-
 	void drawObject();
 	void destroyObject();
 	std::vector<float> makeVector(float array[]);

@@ -8,11 +8,11 @@
 #include "StaticFunction.h"
 #include "Mesh.h"
 #include "Model.h"
-//#include "Framebuffer.h"
+#include "Framebuffer.h"
 #include "Scatter.h"
 
 ScatterGL::GenericInfo info{};
-//ScatterGL::Framebuffer framebuffer;
+ScatterGL::Framebuffer framebuffer;
 ScatterGL::GLCamera camera(glm::vec3(0.0f, 1.0f, 5.0f));
 float nearPlane = 0.1f;
 float farPlane = 10000.0f;
@@ -152,7 +152,7 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	
 	return window;
 }
 
@@ -165,7 +165,9 @@ int main()
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
 
-	//framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+	ScatterGL::MeshObject postWork = ScatterGL::MeshObject(screenQuad, screenQuadIndices, cubeMaterial);
+
+	framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	ScatterGL::MeshObject cubeObject(cube, cubeIndices, cubeMaterial);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
 	
@@ -200,6 +202,10 @@ int main()
 	ScatterGL::Shader depthShader;
 	depthShader.initialize("Shaders\\depthShader.vert",
 		"Shaders\\depthShader.frag");
+
+	ScatterGL::Shader shadowShader;
+	shadowShader.initialize("Shaders\\postProcess.vert",
+		"Shaders\\postProcess.frag");
 
 	//starting Shadow API Scatter
 	scatter::Scatter myScatter;
@@ -244,35 +250,33 @@ int main()
 	glTextureParameteri(depthTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTextureParameteri(depthTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	//glm::mat4 identityMatrix = glm::mat4(1.0f);
-	//identityMatrix = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-	//identityMatrix = glm::scale(identityMatrix, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-	//identityMatrix = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
-	//identityMatrix = glm::scale(identityMatrix, glm::vec3(0.05f, 0.05f, 0.05f));
+	glm::mat4 identityMatrix = glm::mat4(1.0f);
+	identityMatrix = glm::scale(identityMatrix, glm::vec3(0.05f, 0.05f, 0.05f));
 
 	for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
 	{
 		ScatterGL::Mesh& tempMesh = sponza.getMeshes()[i];
-		glm::mat4 identityMatrix = glm::mat4(1.0f);
 		uint64_t tempMeshHandle = myScatter.addMesh(tempMesh.vertices.data(), tempMesh.indices.data(), tempMesh.vertices.size(), tempMesh.indices.size());
-		myScatter.addInstance(tempMeshHandle, &identityMatrix[0][0]);
+		myScatter.addInstance(tempMeshHandle, glm::value_ptr(identityMatrix));
 	}
 	myScatter.build();
-	//framebuffer.attachTexture(depthTexture);
+	framebuffer.attachTexture(depthTexture);
+
+	ScatterGL::Framebuffer justWorkPlease;
+	justWorkPlease.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+
+	//unsigned int colorTexture;
+	//glCreateTextures(GL_TEXTURE_2D, 1, &colorTexture);
+	//glTextureStorage2D(colorTexture, 1, GL_RGBA16F, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+	//glTextureParameteri(colorTexture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTextureParameteri(colorTexture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 
-	unsigned int colorTexture;
-	glCreateTextures(GL_TEXTURE_2D, 1, &colorTexture);
-	glTextureStorage2D(colorTexture, 1, GL_RGBA16F, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
-	glTextureParameteri(colorTexture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTextureParameteri(colorTexture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-	unsigned int framebuffer;
-	glCreateFramebuffers(1, &framebuffer);
-	glNamedFramebufferTexture(framebuffer, GL_COLOR_ATTACHMENT0, colorTexture, 0);
-	glNamedFramebufferDrawBuffer(framebuffer, GL_COLOR_ATTACHMENT0);
-	glNamedFramebufferTexture(framebuffer, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+	//unsigned int framebuffer;
+	//glCreateFramebuffers(1, &framebuffer);
+	//glNamedFramebufferTexture(framebuffer, GL_COLOR_ATTACHMENT0, colorTexture, 0);
+	//glNamedFramebufferDrawBuffer(framebuffer, GL_COLOR_ATTACHMENT0);
+	//glNamedFramebufferTexture(framebuffer, GL_DEPTH_ATTACHMENT, depthTexture, 0);
 
 
 	cubeShader.use();
@@ -284,8 +288,6 @@ int main()
 	cubeShader.setFloat("b", b);
 	glm::mat4 projection = glm::perspectiveRH(glm::radians(camera.zoom),
 		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, nearPlane, farPlane);
-
-
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -299,11 +301,8 @@ int main()
 		// render
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		int w, h;
-		glfwGetFramebufferSize(window, &w, &h);
-		//framebuffer.resizeFramebuffer(w, h, depthTexture);
-		//framebuffer.bind();
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		framebuffer.bind();
+		//glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// setting projection and view matrix
 		glm::mat4 view = camera.getViewMatrix();
@@ -312,12 +311,11 @@ int main()
 		modelShader.use();
 		modelShader.setMat4("projection", projection);
 		modelShader.setMat4("view", view);
-		glm::mat4 identityMatrix = glm::mat4(1.0f);
 		modelShader.setMat4("model", identityMatrix);
 		sponza.draw(modelShader);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		//framebuffer.unbind();
+		
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		framebuffer.unbind();
 
 		//Scatter API render calls & semaphore calls
 		unsigned int texturesThings[] = { shadowTexture, depthTexture };
@@ -332,12 +330,25 @@ int main()
 		GLenum layoutThingsHelper[] = { GL_LAYOUT_SHADER_READ_ONLY_EXT, GL_LAYOUT_DEPTH_STENCIL_ATTACHMENT_EXT };
 		glWaitSemaphoreEXT(doneSemaphore, 0, nullptr, 2, texturesThings, layoutThingsHelper);
 
+		justWorkPlease.bind();
+		shadowShader.use();
+		shadowShader.setInt("shadowTexture", 0);
+		shadowShader.setInt("colorTexture", 1);
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, shadowTexture);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, framebuffer.texture);
+		postWork.drawObject();
+		justWorkPlease.unbind();
 
 		myGui.beginFrameGui();
 		myGui.drawGui();
 		myGui.drawDirectionalLight(sunLight);
-		myGui.drawScene(colorTexture);
-		myGui.drawShadowTexture(shadowTexture);
+		myGui.drawShadowTexture("scene", justWorkPlease.texture);
+
+		myGui.drawShadowTexture("shadow", shadowTexture);
 		myGui.endFrameGui();
 		glfwSwapBuffers(window);
 		glfwPollEvents();

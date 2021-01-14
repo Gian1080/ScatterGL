@@ -69,5 +69,5 @@ void main() {
 
     // store either the original 0, or 1 if the miss shader executed
     // if the miss shader executes it means it was able to 'reach' the light from the current pixel's position
-    imageStore(shadowTexture, ivec2(gl_LaunchIDNV.xy), vec4(origin, 1.0));
+    imageStore(shadowTexture, ivec2(gl_LaunchIDNV.xy), vec4(payload, 1.0));
 }

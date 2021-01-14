@@ -12,6 +12,20 @@ std::vector<float> flatSurface =
         -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  0.0f,  1.0f,
 };
 
+std::vector<float> screenQuad =
+{
+    // positions          // normals           // texture coords
+    -1.0f, -1.0f, 0.0f,  0.0f, 1.0f,  0.0f, 0.0f,  0.0f,
+     1.0f, -1.0f, 0.0f,  0.0f, 1.0f,  0.0f, 1.0f,  0.0f,
+     1.0f, 1.0f, 0.0f,  0.0f, 1.0f,  0.0f,  1.0f,  1.0f,
+    -1.0f, 1.0f, 0.0f,  0.0f, 1.0f,  0.0f,  0.0f,  1.0f,
+};
+
+std::vector<GLuint> screenQuadIndices =
+{
+    0, 1, 3, 3, 1, 2
+};
+
 std::vector<float> cube = {
     // positions          // normals           // texture coords
         -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,

@@ -9,7 +9,7 @@ namespace ScatterGL
 
 	void GLCamera::processKeyboard(Camera_Direction direction, float deltaTime)
 	{
-		float velocity = movementSpeed * deltaTime * 10;
+		float velocity = movementSpeed * deltaTime *2;
 		if (direction == FORWARD) position += front * velocity;
 		if (direction == BACKWARD) position -= front * velocity;
 		if (direction == LEFT) position -= right * velocity;
