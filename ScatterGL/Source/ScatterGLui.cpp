@@ -52,15 +52,25 @@ namespace ScatterGL
 	{
 		ImGui::Begin("DirectionalLightValue");
 		ImGui::Text("Slider to adjust light");
-		ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.01f, -1.0f, 1.0f, "%.2f");
+		ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.01f, -3.14f, 3.14f, "%.2f");
 		ImGui::End();
 	}
 
-	void ScatterGLui::drawScene(ScatterGL::Framebuffer& framebuffer)
+	//ScatterGL::Framebuffer& framebuffer
+	void ScatterGLui::drawScene(unsigned int framebuffer)
 	{
 		ImGui::Begin("Scene");
 		ImVec2 screen = ImGui::GetContentRegionAvail();
-		ImGui::Image((void*)(intptr_t)framebuffer.texture, screen, ImVec2(0, 1), ImVec2(1, 0));
+		//.texture
+		ImGui::Image((void*)(intptr_t)framebuffer, screen, ImVec2(0, 1), ImVec2(1, 0));
+		ImGui::End();
+	}
+
+	void ScatterGLui::drawShadowTexture(unsigned int shadowTexture)
+	{
+		ImGui::Begin("Shadow");
+		ImVec2 screen = ImGui::GetContentRegionAvail();
+		ImGui::Image((void*)(intptr_t)shadowTexture, screen, ImVec2(0, 1), ImVec2(1, 0));
 		ImGui::End();
 	}
 

@@ -33,12 +33,19 @@ namespace ScatterGL
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	}
 
+	void Framebuffer::attachTexture(unsigned int texture)
+	{
+		
+		glNamedFramebufferTexture(fbo, GL_DEPTH_ATTACHMENT, texture, 0);
+	
+	}
+
 	void Framebuffer::unbind()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void Framebuffer::resizeFramebuffer(int width, int height)
+	void Framebuffer::resizeFramebuffer(int width, int height, unsigned int tmpTexture)
 	{
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -46,7 +53,7 @@ namespace ScatterGL
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 		bind();
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tmpTexture, 0);
 		unbind();
 	}
 

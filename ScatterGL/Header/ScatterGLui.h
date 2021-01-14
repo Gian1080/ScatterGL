@@ -13,7 +13,9 @@ public:
 	void destroy();
 	void drawGui();
 	void drawDirectionalLight(DirectionalLight& light);
-	void drawScene(ScatterGL::Framebuffer& framebuffer);
+	//ScatterGL::Framebuffer& framebuffer
+	void drawScene(unsigned int framebuffer);
+	void drawShadowTexture(unsigned int shadowTexture);
 	void beginFrameGui();
 	void endFrameGui();
 private:

@@ -8,14 +8,16 @@
 #include "StaticFunction.h"
 #include "Mesh.h"
 #include "Model.h"
-#include "Framebuffer.h"
+//#include "Framebuffer.h"
 #include "Scatter.h"
 
 ScatterGL::GenericInfo info{};
-ScatterGL::Framebuffer framebuffer;
+//ScatterGL::Framebuffer framebuffer;
 ScatterGL::GLCamera camera(glm::vec3(0.0f, 1.0f, 5.0f));
 float nearPlane = 0.1f;
 float farPlane = 10000.0f;
+
+glm::vec3 RaekorLight = { 0.0f, -0.97f, -0.26f };
 
 ScatterGL::Material cubeMaterial
 {
@@ -35,7 +37,7 @@ ScatterGL::Material surfaceMaterial
 
 ScatterGL::DirectionalLight sunLight
 {
-	glm::vec3(-0.2f, -1.0f, -0.3f), //direction
+	glm::vec3(0.0f, -1.0f, -0.3f), //direction
 	glm::vec3(0.1f, 0.1f, 0.1f), //ambient
 	glm::vec3(0.5f, 0.5f, 0.5f), //diffuse
 	glm::vec3(1.0f, 1.0f, 1.0f) //specular
@@ -136,15 +138,18 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 	{
 		throw std::runtime_error("failed to initialize GLAD \n");
 	}
-	glfwMaximizeWindow(window);
+	//glfwMaximizeWindow(window);
+	glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-	glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(ScatterGL::MessageCallback, nullptr);
+	glDepthFunc(GL_LEQUAL);
+	glFrontFace(GL_CCW);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
@@ -159,9 +164,8 @@ int main()
 	GLFWwindow* window = initWindow(info);
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
-	scatter::Scatter myScatter;
-	myScatter.init();
-	framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+
+	//framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	ScatterGL::MeshObject cubeObject(cube, cubeIndices, cubeMaterial);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
 	
@@ -196,8 +200,80 @@ int main()
 	ScatterGL::Shader depthShader;
 	depthShader.initialize("Shaders\\depthShader.vert",
 		"Shaders\\depthShader.frag");
-	//depthShader.setFloat("nearPlane", 0.1f);
-	//depthShader.setFloat("farPlane", 10000.0f);
+
+	//starting Shadow API Scatter
+	scatter::Scatter myScatter;
+	myScatter.init();
+	//Setting Vertex information in API
+	myScatter.setVertexFormat(scatter::VertexFormat::R32G32B32_SFLOAT);
+	myScatter.setVertexOffset(0);
+	myScatter.setVertexStride(sizeof(ScatterGL::Vertex));
+	myScatter.setIndexFormat(scatter::IndexFormat::UINT32);
+	myScatter.createTextures(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+	//creating memory handles for Scatter
+	void* shadowtxtMemHandle = myScatter.getShadowTextureMemoryHandle();
+	void* depthTxtMemHandle = myScatter.getDepthTextureMemoryhandle();
+	//memory size allocation
+	size_t shadowTexMemSize = myScatter.getShadowTextureMemorySize();
+	size_t depthTexMemSize = myScatter.getDepthTextureMemorySize();
+	//semaphores creation
+	void* getReadySemaphore = myScatter.getReadySemaphoreHandle();
+	void* getDoneSemaphore = myScatter.getDoneSemaphoreHandle();
+
+	unsigned int readySemaphore;
+	unsigned int doneSemaphore;
+	glGenSemaphoresEXT(1, &readySemaphore);
+	glGenSemaphoresEXT(1, &doneSemaphore);
+	glImportSemaphoreWin32HandleEXT(readySemaphore, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, getReadySemaphore);
+	glImportSemaphoreWin32HandleEXT(doneSemaphore, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, getDoneSemaphore);
+	unsigned int shadowTextureMemory;
+	glCreateMemoryObjectsEXT(1, &shadowTextureMemory);
+	glImportMemoryWin32HandleEXT(shadowTextureMemory, shadowTexMemSize, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, shadowtxtMemHandle);
+	unsigned int shadowTexture;
+	glCreateTextures(GL_TEXTURE_2D, 1, &shadowTexture);
+	glTextureStorageMem2DEXT(shadowTexture, 1, GL_RGBA8, info.SCREEN_WIDTH, info.SCREEN_HEIGHT, shadowTextureMemory, 0);
+	glTextureParameteri(shadowTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTextureParameteri(shadowTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	unsigned int depthTextureMemory;
+	glCreateMemoryObjectsEXT(1, &depthTextureMemory);
+	glImportMemoryWin32HandleEXT(depthTextureMemory, depthTexMemSize, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, depthTxtMemHandle);
+	unsigned int depthTexture;
+	glCreateTextures(GL_TEXTURE_2D, 1, &depthTexture);
+	glTextureStorageMem2DEXT(depthTexture, 1, GL_DEPTH_COMPONENT32F, info.SCREEN_WIDTH, info.SCREEN_HEIGHT, depthTextureMemory, 0);
+	glTextureParameteri(depthTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTextureParameteri(depthTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	//glm::mat4 identityMatrix = glm::mat4(1.0f);
+	//identityMatrix = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+	//identityMatrix = glm::scale(identityMatrix, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+	//identityMatrix = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
+	//identityMatrix = glm::scale(identityMatrix, glm::vec3(0.05f, 0.05f, 0.05f));
+
+	for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
+	{
+		ScatterGL::Mesh& tempMesh = sponza.getMeshes()[i];
+		glm::mat4 identityMatrix = glm::mat4(1.0f);
+		uint64_t tempMeshHandle = myScatter.addMesh(tempMesh.vertices.data(), tempMesh.indices.data(), tempMesh.vertices.size(), tempMesh.indices.size());
+		myScatter.addInstance(tempMeshHandle, &identityMatrix[0][0]);
+	}
+	myScatter.build();
+	//framebuffer.attachTexture(depthTexture);
+
+
+	unsigned int colorTexture;
+	glCreateTextures(GL_TEXTURE_2D, 1, &colorTexture);
+	glTextureStorage2D(colorTexture, 1, GL_RGBA16F, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+	glTextureParameteri(colorTexture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTextureParameteri(colorTexture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+	unsigned int framebuffer;
+	glCreateFramebuffers(1, &framebuffer);
+	glNamedFramebufferTexture(framebuffer, GL_COLOR_ATTACHMENT0, colorTexture, 0);
+	glNamedFramebufferDrawBuffer(framebuffer, GL_COLOR_ATTACHMENT0);
+	glNamedFramebufferTexture(framebuffer, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+
 
 	cubeShader.use();
 	float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -206,8 +282,11 @@ int main()
 	cubeShader.setFloat("g", g);
 	float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 	cubeShader.setFloat("b", b);
-	glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
+	glm::mat4 projection = glm::perspectiveRH(glm::radians(camera.zoom),
 		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, nearPlane, farPlane);
+
+
+
 	while(!glfwWindowShouldClose(window))
 	{
 		//calculating time passed since last frame
@@ -216,35 +295,49 @@ int main()
 		info.lastFrame = currentFrame;
 		// user input
 		processInput(window, info);
-
+		glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 		// render
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		int w, h;
 		glfwGetFramebufferSize(window, &w, &h);
-		framebuffer.resizeFramebuffer(w, h);
-		framebuffer.bind();
+		//framebuffer.resizeFramebuffer(w, h, depthTexture);
+		//framebuffer.bind();
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// setting projection and view matrix
 		glm::mat4 view = camera.getViewMatrix();
-		glm::mat4 identityMatrix = glm::mat4(1.0f);
-		identityMatrix = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		identityMatrix = glm::scale(identityMatrix, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+		
 		//model render part
 		modelShader.use();
 		modelShader.setMat4("projection", projection);
 		modelShader.setMat4("view", view);
-		identityMatrix = glm::translate(identityMatrix, glm::vec3(1.0f, 1.0f, 1.0f));
-		identityMatrix = glm::scale(identityMatrix, glm::vec3(0.05f, 0.05f, 0.05f));
+		glm::mat4 identityMatrix = glm::mat4(1.0f);
 		modelShader.setMat4("model", identityMatrix);
-		
 		sponza.draw(modelShader);
-		framebuffer.unbind();
-		
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//framebuffer.unbind();
+
+		//Scatter API render calls & semaphore calls
+		unsigned int texturesThings[] = { shadowTexture, depthTexture };
+		GLenum textureThingsHelper[] = { GL_LAYOUT_GENERAL_EXT, GL_LAYOUT_GENERAL_EXT };
+		glSignalSemaphoreEXT(readySemaphore, 0, nullptr, 2, texturesThings, textureThingsHelper);
+
+		myScatter.setLightDirection(sunLight.direction.r, sunLight.direction.g, sunLight.direction.b);
+		glm::mat4 invertedMatrix = glm::inverse(projection * view);
+		myScatter.setInverseViewProjectionMatrix(glm::value_ptr(invertedMatrix));
+		myScatter.submit(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+
+		GLenum layoutThingsHelper[] = { GL_LAYOUT_SHADER_READ_ONLY_EXT, GL_LAYOUT_DEPTH_STENCIL_ATTACHMENT_EXT };
+		glWaitSemaphoreEXT(doneSemaphore, 0, nullptr, 2, texturesThings, layoutThingsHelper);
+
+
 		myGui.beginFrameGui();
 		myGui.drawGui();
 		myGui.drawDirectionalLight(sunLight);
-		myGui.drawScene(framebuffer);
+		myGui.drawScene(colorTexture);
+		myGui.drawShadowTexture(shadowTexture);
 		myGui.endFrameGui();
 		glfwSwapBuffers(window);
 		glfwPollEvents();

@@ -17,12 +17,13 @@ public:
 	}
 
 	void draw(Shader& shader);
+	std::vector<Mesh>& getMeshes();
 
 private:
 	std::vector<Mesh> meshes;
 	std::string directory;
 	std::vector<Texture> textures_loaded;
-
+	
 	void loadModel(std::string pathName);
 	void processNode(aiNode* node, const aiScene* scene);
 	Mesh processMesh(aiMesh* mesh, const aiScene* scene);

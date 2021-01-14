@@ -4,12 +4,12 @@ namespace ScatterGL
 {
 	glm::mat4 GLCamera::getViewMatrix()
 	{
-		return glm::lookAt(position, position + front, up);
+		return glm::lookAtRH(position, position + front, up);
 	}
 
 	void GLCamera::processKeyboard(Camera_Direction direction, float deltaTime)
 	{
-		float velocity = movementSpeed * deltaTime;
+		float velocity = movementSpeed * deltaTime * 10;
 		if (direction == FORWARD) position += front * velocity;
 		if (direction == BACKWARD) position -= front * velocity;
 		if (direction == LEFT) position -= right * velocity;

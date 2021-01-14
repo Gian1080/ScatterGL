@@ -178,4 +178,9 @@ namespace ScatterGL
 		return textureID;
 	}
 
+	std::vector<Mesh>& Model::getMeshes()
+	{
+		return meshes;
+	}
+
 }
