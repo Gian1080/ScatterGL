@@ -9,6 +9,7 @@ class Framebuffer
 public:
 	unsigned int fbo;
 	unsigned int texture;
+
 	unsigned int depthTexture;
 
 	

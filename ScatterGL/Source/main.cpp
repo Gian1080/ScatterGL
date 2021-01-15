@@ -138,7 +138,7 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 	{
 		throw std::runtime_error("failed to initialize GLAD \n");
 	}
-	//glfwMaximizeWindow(window);
+	glfwMaximizeWindow(window);
 	glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
