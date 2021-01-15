@@ -166,6 +166,7 @@ int main()
 	ScatterGL::MeshObject postWork = ScatterGL::MeshObject(screenQuad, screenQuadIndices, cubeMaterial);
 
 	framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+
 	ScatterGL::MeshObject cubeObject(cube, cubeIndices, cubeMaterial);
 	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
 	
@@ -223,30 +224,30 @@ int main()
 	//semaphores creation
 	void* getReadySemaphore = myScatter.getReadySemaphoreHandle();
 	void* getDoneSemaphore = myScatter.getDoneSemaphoreHandle();
-
 	unsigned int readySemaphore;
 	unsigned int doneSemaphore;
 	glGenSemaphoresEXT(1, &readySemaphore);
 	glGenSemaphoresEXT(1, &doneSemaphore);
 	glImportSemaphoreWin32HandleEXT(readySemaphore, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, getReadySemaphore);
 	glImportSemaphoreWin32HandleEXT(doneSemaphore, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, getDoneSemaphore);
+
 	unsigned int shadowTextureMemory;
 	glCreateMemoryObjectsEXT(1, &shadowTextureMemory);
 	glImportMemoryWin32HandleEXT(shadowTextureMemory, shadowTexMemSize, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, shadowtxtMemHandle);
-	unsigned int shadowTexture;
-	glCreateTextures(GL_TEXTURE_2D, 1, &shadowTexture);
-	glTextureStorageMem2DEXT(shadowTexture, 1, GL_RGBA8, info.SCREEN_WIDTH, info.SCREEN_HEIGHT, shadowTextureMemory, 0);
-	glTextureParameteri(shadowTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTextureParameteri(shadowTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	
+	glCreateTextures(GL_TEXTURE_2D, 1, &framebuffer.shadowTexture);
+	glTextureStorageMem2DEXT(framebuffer.shadowTexture, 1, GL_RGBA8, info.SCREEN_WIDTH, info.SCREEN_HEIGHT, shadowTextureMemory, 0);
+	glTextureParameteri(framebuffer.shadowTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTextureParameteri(framebuffer.shadowTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	unsigned int depthTextureMemory;
 	glCreateMemoryObjectsEXT(1, &depthTextureMemory);
 	glImportMemoryWin32HandleEXT(depthTextureMemory, depthTexMemSize, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, depthTxtMemHandle);
-	unsigned int depthTexture;
-	glCreateTextures(GL_TEXTURE_2D, 1, &depthTexture);
-	glTextureStorageMem2DEXT(depthTexture, 1, GL_DEPTH_COMPONENT32F, info.SCREEN_WIDTH, info.SCREEN_HEIGHT, depthTextureMemory, 0);
-	glTextureParameteri(depthTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTextureParameteri(depthTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//unsigned int depthTexture;
+	glCreateTextures(GL_TEXTURE_2D, 1, &framebuffer.depthTexture);
+	glTextureStorageMem2DEXT(framebuffer.depthTexture, 1, GL_DEPTH_COMPONENT32F, info.SCREEN_WIDTH, info.SCREEN_HEIGHT, depthTextureMemory, 0);
+	glTextureParameteri(framebuffer.depthTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTextureParameteri(framebuffer.depthTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	glm::mat4 identityMatrix = glm::mat4(1.0f);
 	identityMatrix = glm::scale(identityMatrix, glm::vec3(0.05f, 0.05f, 0.05f));
@@ -258,7 +259,7 @@ int main()
 		myScatter.addInstance(tempMeshHandle, glm::value_ptr(identityMatrix));
 	}
 	myScatter.build();
-	framebuffer.attachTexture(depthTexture);
+	framebuffer.attachTexture(framebuffer.depthTexture);
 
 	ScatterGL::Framebuffer justWorkPlease;
 	justWorkPlease.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
@@ -302,7 +303,7 @@ int main()
 		framebuffer.unbind();
 
 		//Scatter API render calls & semaphore calls
-		unsigned int texturesThings[] = { shadowTexture, depthTexture };
+		unsigned int texturesThings[] = { framebuffer.shadowTexture, framebuffer.depthTexture };
 		GLenum textureThingsHelper[] = { GL_LAYOUT_GENERAL_EXT, GL_LAYOUT_GENERAL_EXT };
 		glSignalSemaphoreEXT(readySemaphore, 0, nullptr, 2, texturesThings, textureThingsHelper);
 
@@ -322,18 +323,18 @@ int main()
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, shadowTexture);
+		glBindTexture(GL_TEXTURE_2D, framebuffer.shadowTexture);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, framebuffer.texture);
+		glBindTexture(GL_TEXTURE_2D, framebuffer.colorTexture);
 		postWork.drawObject();
 		justWorkPlease.unbind();
 
 		myGui.beginFrameGui();
 		myGui.drawGui();
 		myGui.drawDirectionalLight(sunLight);
-		myGui.drawShadowTexture("scene", justWorkPlease.texture);
+		myGui.drawShadowTexture("scene", justWorkPlease.colorTexture);
 
-		myGui.drawShadowTexture("shadow", shadowTexture);
+		myGui.drawShadowTexture("shadow", framebuffer.shadowTexture);
 		myGui.endFrameGui();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
