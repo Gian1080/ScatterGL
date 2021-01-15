@@ -38,9 +38,7 @@ ScatterGL::Material surfaceMaterial
 ScatterGL::DirectionalLight sunLight
 {
 	glm::vec3(0.0f, -1.0f, -0.3f), //direction
-	glm::vec3(0.1f, 0.1f, 0.1f), //ambient
-	glm::vec3(0.5f, 0.5f, 0.5f), //diffuse
-	glm::vec3(1.0f, 1.0f, 1.0f) //specular
+	1.0f
 };
 
 glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
@@ -265,20 +263,6 @@ int main()
 	ScatterGL::Framebuffer justWorkPlease;
 	justWorkPlease.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 
-	//unsigned int colorTexture;
-	//glCreateTextures(GL_TEXTURE_2D, 1, &colorTexture);
-	//glTextureStorage2D(colorTexture, 1, GL_RGBA16F, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
-	//glTextureParameteri(colorTexture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTextureParameteri(colorTexture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-	//unsigned int framebuffer;
-	//glCreateFramebuffers(1, &framebuffer);
-	//glNamedFramebufferTexture(framebuffer, GL_COLOR_ATTACHMENT0, colorTexture, 0);
-	//glNamedFramebufferDrawBuffer(framebuffer, GL_COLOR_ATTACHMENT0);
-	//glNamedFramebufferTexture(framebuffer, GL_DEPTH_ATTACHMENT, depthTexture, 0);
-
-
 	cubeShader.use();
 	float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 	cubeShader.setFloat("r", r);
@@ -332,6 +316,7 @@ int main()
 
 		justWorkPlease.bind();
 		shadowShader.use();
+		shadowShader.setFloat("intensity", sunLight.intensity);
 		shadowShader.setInt("shadowTexture", 0);
 		shadowShader.setInt("colorTexture", 1);
 

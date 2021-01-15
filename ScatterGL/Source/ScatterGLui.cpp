@@ -53,6 +53,8 @@ namespace ScatterGL
 		ImGui::Begin("DirectionalLightValue");
 		ImGui::Text("Slider to adjust light");
 		ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.005f, -1.000f, 1.000f, "%.2f");
+		ImGui::DragFloat("Intensity", &light.intensity, 0.01f, 0.00f, 5.00f, "%.1f");
+
 		ImGui::End();
 	}
 
