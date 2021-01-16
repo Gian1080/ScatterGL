@@ -58,12 +58,11 @@ namespace ScatterGL
 		ImGui::End();
 	}
 
-	//ScatterGL::Framebuffer& framebuffer
-	void ScatterGLui::drawShadowTexture(std::string name, unsigned int shadowTexture)
+	void ScatterGLui::drawTexture(std::string name, unsigned int texture)
 	{
 		ImGui::Begin(name.c_str());
 		ImVec2 screen = ImGui::GetContentRegionAvail();
-		ImGui::Image((void*)(intptr_t)shadowTexture, screen, ImVec2(0, 1), ImVec2(1, 0));
+		ImGui::Image((void*)(intptr_t)texture, screen, ImVec2(0, 1), ImVec2(1, 0));
 		ImGui::End();
 	}
 

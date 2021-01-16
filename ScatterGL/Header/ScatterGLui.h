@@ -13,7 +13,7 @@ public:
 	void destroy();
 	void drawGui();
 	void drawDirectionalLight(DirectionalLight& light);
-	void drawShadowTexture(std::string name, unsigned int shadowTexture);
+	void drawTexture(std::string name, unsigned int shadowTexture);
 	void beginFrameGui();
 	void endFrameGui();
 private:

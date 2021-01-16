@@ -261,18 +261,19 @@ int main()
 	myScatter.build();
 	framebuffer.attachTexture(framebuffer.depthTexture);
 
-	ScatterGL::Framebuffer justWorkPlease;
-	justWorkPlease.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+	ScatterGL::Framebuffer postProcess;
+	postProcess.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 
-	cubeShader.use();
-	float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-	cubeShader.setFloat("r", r);
-	float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-	cubeShader.setFloat("g", g);
-	float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-	cubeShader.setFloat("b", b);
+	//cubeShader.use();
+	//float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	//cubeShader.setFloat("r", r);
+	//float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	//cubeShader.setFloat("g", g);
+	//float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	//cubeShader.setFloat("b", b);
 	glm::mat4 projection = glm::perspectiveRH(glm::radians(camera.zoom),
 		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, nearPlane, farPlane);
+	glClearColor(0.1f, 0.1f, 0.1f, 0.5f);
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -280,26 +281,26 @@ int main()
 		float currentFrame = glfwGetTime();
 		info.deltaTime = currentFrame - info.lastFrame;
 		info.lastFrame = currentFrame;
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 		// user input
 		processInput(window, info);
-		glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
-		// render
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		framebuffer.bind();
-		//glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		// setting projection and view matrix
 		glm::mat4 view = camera.getViewMatrix();
+
+
+		framebuffer.bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
+		// setting projection and view matrix
 		//model render part
 		modelShader.use();
+		modelShader.setInt("texture_diffuse1", 0);
 		modelShader.setMat4("projection", projection);
 		modelShader.setMat4("view", view);
 		modelShader.setMat4("model", identityMatrix);
 		sponza.draw(modelShader);
 		
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		framebuffer.unbind();
 
 		//Scatter API render calls & semaphore calls
@@ -315,7 +316,7 @@ int main()
 		GLenum layoutThingsHelper[] = { GL_LAYOUT_SHADER_READ_ONLY_EXT, GL_LAYOUT_DEPTH_STENCIL_ATTACHMENT_EXT };
 		glWaitSemaphoreEXT(doneSemaphore, 0, nullptr, 2, texturesThings, layoutThingsHelper);
 
-		justWorkPlease.bind();
+		postProcess.bind();
 		shadowShader.use();
 		shadowShader.setFloat("intensity", sunLight.intensity);
 		shadowShader.setInt("shadowTexture", 0);
@@ -327,14 +328,16 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, framebuffer.colorTexture);
 		postWork.drawObject();
-		justWorkPlease.unbind();
+		postProcess.unbind();
 
 		myGui.beginFrameGui();
 		myGui.drawGui();
 		myGui.drawDirectionalLight(sunLight);
-		myGui.drawShadowTexture("scene", justWorkPlease.colorTexture);
+		myGui.drawTexture("scene", postProcess.colorTexture);
+		myGui.drawTexture("normals", framebuffer.normalTexture);
+		myGui.drawTexture("positions", framebuffer.positionTexture);
+		myGui.drawTexture("shadow", framebuffer.shadowTexture);
 
-		myGui.drawShadowTexture("shadow", framebuffer.shadowTexture);
 		myGui.endFrameGui();
 		glfwSwapBuffers(window);
 		glfwPollEvents();

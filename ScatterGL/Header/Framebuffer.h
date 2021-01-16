@@ -8,12 +8,15 @@ class Framebuffer
 {
 public:
 	unsigned int fbo;
+
 	unsigned int colorTexture;
-	unsigned int postProcessTexture;
 	unsigned int depthTexture;
-	unsigned int shadowTexture;
 	unsigned int normalTexture;
 	unsigned int positionTexture;
+	unsigned int shadowTexture;
+	unsigned int postProcessTexture;
+
+
 
 	
 
