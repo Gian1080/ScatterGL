@@ -1,5 +1,7 @@
 #version 460 core
 layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 normalColor;
+layout (location = 2) out vec4 positionColor;
 
 in vec3 FragmentPosition;
 in vec3 Normal;
@@ -27,7 +29,8 @@ void main()
 {
     //ambient light
     vec3 ambient = light.ambient * vec3(texture(material.diffuse, texCoords));
-
+    normalColor = vec4(Normal, 1.0f);
+    positionColor = vec4(FragmentPosition, 1.0f);
     //diffuse lighting
     vec3 norm = normalize(Normal);
     // light.position - FragmentPosition

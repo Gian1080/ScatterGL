@@ -14,10 +14,10 @@ public:
 	void destroyObject();
 	std::vector<float> makeVector(float array[]);
 	Material& material;
-
-private:
 	std::vector<float> vertices;
 	std::vector<GLuint> indices;
+
+private:
 	unsigned int VAO, VBO, EBO;
 	const void* vertDataSize;
 };

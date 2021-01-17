@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "ScatterGLui.h"
-#include "GLCamera.h"
+#include "Camera.h"
 #include "Shader.h"
 #include "GLTexture.h"
 #include "TestVariables.h"
@@ -13,7 +13,7 @@
 
 ScatterGL::GenericInfo info{};
 ScatterGL::Framebuffer framebuffer;
-ScatterGL::GLCamera camera(glm::vec3(0.0f, 1.0f, 5.0f));
+ScatterGL::Camera camera(glm::vec3(0.0f, 1.0f, 5.0f));
 float nearPlane = 0.1f;
 float farPlane = 10000.0f;
 
@@ -166,7 +166,6 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 
 int main()
 {
-	
 	srand(static_cast <unsigned> (time(0)));
 	stbi_set_flip_vertically_on_load(false);
 	GLFWwindow* window = initWindow(info);
@@ -263,25 +262,25 @@ int main()
 
 	glm::mat4 identityMatrix = glm::mat4(1.0f);
 	identityMatrix = glm::scale(identityMatrix, glm::vec3(0.05f, 0.05f, 0.05f));
-
+	glm::mat4 matrixTwee = glm::mat4(1.0);
+	matrixTwee = glm::scale(matrixTwee, glm::vec3(2.0f, 2.0f, 2.0f));
+	matrixTwee = glm::translate(matrixTwee, glm::vec3(0.0f, 2.0f, 0.0f));
 	for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
 	{
 		ScatterGL::Mesh& tempMesh = sponza.getMeshes()[i];
 		uint64_t tempMeshHandle = myScatter.addMesh(tempMesh.vertices.data(), tempMesh.indices.data(), tempMesh.vertices.size(), tempMesh.indices.size());
 		myScatter.addInstance(tempMeshHandle, glm::value_ptr(identityMatrix));
 	}
+	ScatterGL::MeshObject& tempMesh = block;
+	uint64_t tempMeshHandle = myScatter.addMesh(tempMesh.vertices.data(), tempMesh.indices.data(), tempMesh.vertices.size(), tempMesh.indices.size());
+	myScatter.addInstance(tempMeshHandle, glm::value_ptr(matrixTwee));
 	myScatter.build();
 	framebuffer.attachTexture(framebuffer.depthTexture);
 
 	ScatterGL::Framebuffer postProcess;
 	postProcess.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 
-	//float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-	//cubeShader.setFloat("r", r);
-	//float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-	//cubeShader.setFloat("g", g);
-	//float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-	//cubeShader.setFloat("b", b);
+
 	glm::mat4 projection = glm::perspectiveRH(glm::radians(camera.zoom),
 		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, nearPlane, farPlane);
 	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
@@ -303,9 +302,7 @@ int main()
 		framebuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::mat4 matrixTwee = glm::mat4(1.0);
-		matrixTwee = glm::scale(matrixTwee, glm::vec3(2.0f, 2.0f, 2.0f));
-		matrixTwee = glm::translate(matrixTwee, glm::vec3(0.0f, 2.0f, 0.0f));
+
 
 		materialShader.use();
 		materialShader.setMat4("projection", projection);
@@ -372,9 +369,6 @@ int main()
 		myGui.drawTexture("normals", framebuffer.normalTexture);
 		myGui.drawTexture("positions", framebuffer.positionTexture);
 		myGui.drawTexture("shadow", framebuffer.shadowTexture);
-		myGui.drawTexture("depth", framebuffer.depthTexture);
-
-
 		myGui.endFrameGui();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -384,6 +378,16 @@ int main()
 	glfwTerminate();
 }
 
+void say()
+{
+	std::cout << " IETS \n";
+}
 
 
 
+//float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+//cubeShader.setFloat("r", r);
+//float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+//cubeShader.setFloat("g", g);
+//float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+//cubeShader.setFloat("b", b);

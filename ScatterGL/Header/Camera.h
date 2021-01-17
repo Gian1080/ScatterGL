@@ -21,7 +21,7 @@ const float ZOOM = 45.0f;
 namespace ScatterGL
 {
 
-class GLCamera
+class Camera
 {
 public:
 	float yaw;
@@ -39,7 +39,7 @@ public:
 	glm::vec3 worldUp;
 
 	//default constructor
-	GLCamera() :
+	Camera() :
 		front(glm::vec3(0.0f, 0.0f, -1.0f)),
 		movementSpeed(SPEED),
 		mouseSensitivity(SENSITIVITY),
@@ -50,7 +50,7 @@ public:
 		pitch(PITCH)
 	{}
 	//constructor with vectors
-	GLCamera(glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f),
+	Camera(glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f),
 		float Yaw = YAW, float Pitch = PITCH) :
 
@@ -66,7 +66,7 @@ public:
 		updateCameraVectors();
 	}
 	//constructor with scalar (single) values
-	GLCamera(float posX, float posY, float posZ, float upX, float upY, float upZ, float Yaw, float Pitch) :
+	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float Yaw, float Pitch) :
 		front(glm::vec3(0.0f, 0.0f, -1.0f)),
 		movementSpeed(SPEED),
 		mouseSensitivity(SENSITIVITY),

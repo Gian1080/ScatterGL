@@ -1,13 +1,13 @@
-#include "GLCamera.h"
+#include "Camera.h"
 
 namespace ScatterGL
 {
-	glm::mat4 GLCamera::getViewMatrix()
+	glm::mat4 Camera::getViewMatrix()
 	{
 		return glm::lookAtRH(position, position + front, up);
 	}
 
-	void GLCamera::processKeyboard(Camera_Direction direction, float deltaTime)
+	void Camera::processKeyboard(Camera_Direction direction, float deltaTime)
 	{
 		float velocity = movementSpeed * deltaTime *2;
 		if (direction == FORWARD) position += front * velocity;
@@ -19,7 +19,7 @@ namespace ScatterGL
 
 	}
 
-	void GLCamera::processMouseMovement(float xOffset, float yOffset)
+	void Camera::processMouseMovement(float xOffset, float yOffset)
 	{
 		xOffset *= mouseSensitivity;
 		yOffset *= mouseSensitivity;
@@ -35,18 +35,18 @@ namespace ScatterGL
 		}
 		if (!mouseForMenu)
 		{
-			GLCamera::updateCameraVectors();
+			Camera::updateCameraVectors();
 		}
 	}
 
-	void GLCamera::processMouseScroll(float yOffset)
+	void Camera::processMouseScroll(float yOffset)
 	{
 		zoom -= (float)yOffset;
 		if (zoom < 1.0f) zoom = 1.0f;
 		if (zoom > 45.0f) zoom = 45.0f;
 	}
 
-	void GLCamera::updateCameraVectors()
+	void Camera::updateCameraVectors()
 	{
 		//calculating new front vector
 		glm::vec3 Front;
