@@ -7,9 +7,9 @@ out vec3 FragmentPosition;
 out vec3 Normal;
 out vec2 texCoords;
 
-uniform mat4 model;
-uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 model;
 
 void main()
 {

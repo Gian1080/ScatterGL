@@ -1,11 +1,9 @@
 #version 460 core
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
 
-in vec2 texCoords;
 in vec3 FragmentPosition;
 in vec3 Normal;
-
-
+in vec2 texCoords;
 
 struct Material
 {
@@ -15,7 +13,6 @@ struct Material
 };
 struct Light
 {
-    vec3 direction;
 	vec3 position;
 	vec3 ambient;
 	vec3 diffuse;
@@ -34,7 +31,7 @@ void main()
     //diffuse lighting
     vec3 norm = normalize(Normal);
     // light.position - FragmentPosition
-    vec3 lightDirection = normalize(-light.direction);
+    vec3 lightDirection = normalize(light.position - FragmentPosition);
     float diff = max(dot(norm, lightDirection), 0.0);
     vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, texCoords));
 

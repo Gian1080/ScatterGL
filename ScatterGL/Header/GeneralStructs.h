@@ -28,6 +28,15 @@ struct DirectionalLight
 	float intensity;
 };
 
+struct MaterialLight
+{
+	glm::vec3 direction;
+	glm::vec3 ambient;
+	glm::vec3 diffuse;
+	glm::vec3 specular;
+	float shine;
+};
+
 struct Vertex
 {
 	glm::vec3 position;

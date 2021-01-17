@@ -35,6 +35,16 @@ ScatterGL::Material surfaceMaterial
 	2.0f							//shine
 };
 
+ScatterGL::MaterialLight materialLight
+{
+	glm::vec3(1.0f, 1.0f, 1.0f),   //ambient
+	glm::vec3(1.0f, 1.0f, 1.0f),   //diffuse
+	glm::vec3(0.5f, 0.5f, 0.5f),    //specular
+	glm::vec3(0.5f, 0.5f, 0.5f),    
+
+	2.0f							//shine
+};
+
 ScatterGL::DirectionalLight sunLight
 {
 	glm::vec3(0.0f, -1.0f, -0.3f), //direction
@@ -149,7 +159,7 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 	glFrontFace(GL_CCW);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	
 	return window;
 }
@@ -162,6 +172,8 @@ int main()
 	GLFWwindow* window = initWindow(info);
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
+
+	ScatterGL::MeshObject block = ScatterGL::MeshObject(cube, cubeIndices, cubeMaterial);
 
 	ScatterGL::MeshObject postWork = ScatterGL::MeshObject(screenQuad, screenQuadIndices, cubeMaterial);
 
@@ -243,7 +255,7 @@ int main()
 	unsigned int depthTextureMemory;
 	glCreateMemoryObjectsEXT(1, &depthTextureMemory);
 	glImportMemoryWin32HandleEXT(depthTextureMemory, depthTexMemSize, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, depthTxtMemHandle);
-	//unsigned int depthTexture;
+
 	glCreateTextures(GL_TEXTURE_2D, 1, &framebuffer.depthTexture);
 	glTextureStorageMem2DEXT(framebuffer.depthTexture, 1, GL_DEPTH_COMPONENT32F, info.SCREEN_WIDTH, info.SCREEN_HEIGHT, depthTextureMemory, 0);
 	glTextureParameteri(framebuffer.depthTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -264,7 +276,6 @@ int main()
 	ScatterGL::Framebuffer postProcess;
 	postProcess.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 
-	//cubeShader.use();
 	//float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 	//cubeShader.setFloat("r", r);
 	//float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -273,7 +284,7 @@ int main()
 	//cubeShader.setFloat("b", b);
 	glm::mat4 projection = glm::perspectiveRH(glm::radians(camera.zoom),
 		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, nearPlane, farPlane);
-	glClearColor(0.1f, 0.1f, 0.1f, 0.5f);
+	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -286,14 +297,38 @@ int main()
 		glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 		// user input
 		processInput(window, info);
+		// setting view matrix
 		glm::mat4 view = camera.getViewMatrix();
-
-
+		// cube renderpass
 		framebuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		// setting projection and view matrix
-		//model render part
+
+		glm::mat4 matrixTwee = glm::mat4(1.0);
+		matrixTwee = glm::scale(matrixTwee, glm::vec3(2.0f, 2.0f, 2.0f));
+		matrixTwee = glm::translate(matrixTwee, glm::vec3(0.0f, 2.0f, 0.0f));
+
+		materialShader.use();
+		materialShader.setMat4("projection", projection);
+		materialShader.setMat4("view", view);
+		materialShader.setMat4("model", matrixTwee);
+		materialShader.setVec3("viewPosition", camera.position);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, boxTexture.texture);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specularBoxTexture.texture);
+
+		materialShader.setInt("material.diffuse", 0);
+		materialShader.setInt("material.specular", 1);
+		materialShader.setFloat("material.shine", 64.0f);
+
+		materialShader.setVec3("light.position", lightPosition);
+		materialShader.setVec3("light.diffuse", 0.2f, 0.2f, 0.2f);
+		materialShader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
+		materialShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+		block.drawObject();
+
+		//model rederpass
 		modelShader.use();
 		modelShader.setInt("texture_diffuse1", 0);
 		modelShader.setMat4("projection", projection);
@@ -337,6 +372,8 @@ int main()
 		myGui.drawTexture("normals", framebuffer.normalTexture);
 		myGui.drawTexture("positions", framebuffer.positionTexture);
 		myGui.drawTexture("shadow", framebuffer.shadowTexture);
+		myGui.drawTexture("depth", framebuffer.depthTexture);
+
 
 		myGui.endFrameGui();
 		glfwSwapBuffers(window);
