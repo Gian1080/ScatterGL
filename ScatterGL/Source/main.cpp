@@ -16,9 +16,6 @@ ScatterGL::Framebuffer framebuffer;
 ScatterGL::Camera camera(glm::vec3(0.0f, 1.0f, 5.0f));
 float nearPlane = 0.1f;
 float farPlane = 10000.0f;
-
-glm::vec3 RaekorLight = { 0.0f, -0.97f, -0.26f };
-
 ScatterGL::Material cubeMaterial
 {
 	glm::vec3(1.0f, 0.5f, 0.31f),   //ambient
@@ -27,31 +24,11 @@ ScatterGL::Material cubeMaterial
 	8.0f							//shine
 };
 
-ScatterGL::Material surfaceMaterial
-{
-	glm::vec3(1.0f, 1.0f, 1.0f),   //ambient
-	glm::vec3(1.0f, 1.0f, 1.0f),   //diffuse
-	glm::vec3(0.0f, 0.0f, 0.0f),    //specular
-	2.0f							//shine
-};
-
-ScatterGL::MaterialLight materialLight
-{
-	glm::vec3(1.0f, 1.0f, 1.0f),   //ambient
-	glm::vec3(1.0f, 1.0f, 1.0f),   //diffuse
-	glm::vec3(0.5f, 0.5f, 0.5f),    //specular
-	glm::vec3(0.5f, 0.5f, 0.5f),    
-
-	2.0f							//shine
-};
-
 ScatterGL::DirectionalLight sunLight
 {
-	glm::vec3(0.0f, -1.0f, -0.3f), //direction
+	glm::vec3(0.0f, -1.0f, 0.0f), //direction
 	1.0f
 };
-
-glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
 
 void framebuffer_resize_callback(GLFWwindow* windowPTR, int width, int height)
 {
@@ -156,10 +133,11 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(ScatterGL::MessageCallback, nullptr);
 	glDepthFunc(GL_LEQUAL);
-	glFrontFace(GL_CCW);
+	//glFrontFace(GL_CCW);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 	
 	return window;
 }
@@ -172,19 +150,11 @@ int main()
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
 
-	ScatterGL::MeshObject block = ScatterGL::MeshObject(cube, cubeIndices, cubeMaterial);
+	ScatterGL::MeshObject block = ScatterGL::MeshObject(cube, cubeIndices);
+	ScatterGL::MeshObject fullScreenQuad = ScatterGL::MeshObject(screenQuad, screenQuadIndices);
 
-	ScatterGL::MeshObject postWork = ScatterGL::MeshObject(screenQuad, screenQuadIndices, cubeMaterial);
-
-	framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
-
-	ScatterGL::MeshObject cubeObject(cube, cubeIndices, cubeMaterial);
-	ScatterGL::GLTexture woodTexture("Textures\\container.jpg");
-	
 	ScatterGL::GLTexture boxTexture("Textures\\container2.png");
 	ScatterGL::GLTexture specularBoxTexture("Textures\\container2_specular.png");
-
-	ScatterGL::MeshObject surface(flatSurface, flatIndices, surfaceMaterial);
 	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
 
 	ScatterGL::Shader cubeShader;
@@ -217,6 +187,7 @@ int main()
 	shadowShader.initialize("Shaders\\postProcess.vert",
 		"Shaders\\postProcess.frag");
 
+	framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	//starting Shadow API Scatter
 	scatter::Scatter myScatter;
 	myScatter.init();
@@ -316,9 +287,10 @@ int main()
 
 		materialShader.setInt("material.diffuse", 0);
 		materialShader.setInt("material.specular", 1);
-		materialShader.setFloat("material.shine", 64.0f);
-
-		materialShader.setVec3("light.position", lightPosition);
+		materialShader.setFloat("material.shine", 32.0f);
+		//glm::vec3 lightDirection = sunLight.direction;
+		//lightDirection *= -10.0f;
+		materialShader.setVec3("light.direction", sunLight.direction);
 		materialShader.setVec3("light.diffuse", 0.2f, 0.2f, 0.2f);
 		materialShader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
 		materialShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
@@ -359,7 +331,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, framebuffer.shadowTexture);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, framebuffer.colorTexture);
-		postWork.drawObject();
+		fullScreenQuad.drawObject();
 		postProcess.unbind();
 
 		myGui.beginFrameGui();
@@ -374,7 +346,6 @@ int main()
 		glfwPollEvents();
 	}
 	myGui.destroy();
-	cubeObject.destroyObject();
 	glfwTerminate();
 }
 

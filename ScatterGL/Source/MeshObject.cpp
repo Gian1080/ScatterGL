@@ -2,10 +2,9 @@
 
 namespace ScatterGL
 {
-MeshObject::MeshObject(std::vector<float>& verticesREF, std::vector<GLuint>& indicesREF, Material& materialREF) :
+MeshObject::MeshObject(std::vector<float>& verticesREF, std::vector<GLuint>& indicesREF) :
 	vertices(verticesREF),
-	indices(indicesREF),
-	material(materialREF)
+	indices(indicesREF)
 {
 	glGenVertexArrays(1, &this->VAO);
 	glBindVertexArray(VAO);
