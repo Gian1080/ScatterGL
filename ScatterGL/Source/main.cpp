@@ -219,7 +219,7 @@ int main()
 		"Shaders\\depthShader.frag");
 
 	ScatterGL::Shader uberShader;
-	depthShader.initialize("Shaders\\UberShader.vert",
+	uberShader.initialize("Shaders\\UberShader.vert",
 		"Shaders\\UberShader.frag");
 
 	ScatterGL::Shader shadowShader;

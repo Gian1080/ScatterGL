@@ -11,7 +11,7 @@ struct Material
 {
 	sampler2D diffuse;
 	sampler2D specular;
-	float shine; //prefered numbers --> 1, 2, 4, 8 etc..
+	float shine; 
 };
 struct Light
 {
@@ -55,7 +55,7 @@ void main()
 
     //point light calculations
     float distanceToSourceLight = length(pointLight.position - FragmentPosition);
-    float attenuation = 1.0 / (pointLight. constant + pointLight.linear * distanceToSourceLight + 
+    float attenuation = 1.0 / (pointLight.constant + pointLight.linear * distanceToSourceLight + 
                             pointLight.quadratic * (distanceToSourceLight * distanceToSourceLight));
 
     //combining results

@@ -11,7 +11,7 @@ struct Material
 {
 	sampler2D diffuse;
 	sampler2D specular;
-	float shine; //prefered numbers --> 1, 2, 4, 8 etc..
+	float shine; 
 };
 struct Light
 {
@@ -28,13 +28,12 @@ struct PointLight
     float linear;
     float quadratic;
 };
-
+uniform sampler2D texture_diffuse1;
 uniform vec3 viewPosition;
 uniform Material material;
 uniform Light light;
 uniform PointLight pointLight;
 uniform float pointLightScale;
-uniform sampler2D texture_diffuse1;
 
 void main()
 {
@@ -60,19 +59,14 @@ void main()
                             pointLight.quadratic * (distanceToSourceLight * distanceToSourceLight));
 
     //combining results
+    vec3 result = diffuse + ambient + specular;
     ambient  *= attenuation; 
     diffuse  *= attenuation;
     specular *= attenuation;
-    vec3 result = diffuse + ambient + specular;
-
-    
-    positionColor = vec4(FragmentPosition, 1.0);
-    normalColor = vec4(Normal, 1.0);
     FragColor = texture(texture_diffuse1, texCoords);
+    FragColor += vec4(result, 1.0);
     if(FragColor.a <0.5)
     {
         discard;
     }
-
-    FragColor = vec4(result, 1.0);
 }
