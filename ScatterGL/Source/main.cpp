@@ -32,6 +32,14 @@ ScatterGL::DirectionalLight sunLight
 	1.0f
 };
 
+ScatterGL::PointLight lightOrb
+{
+	glm::vec3(-1.0f, 0.0f, -1.0f),
+	1.0f,
+	0.5f,
+	0.005f
+};
+
 void framebuffer_resize_callback(GLFWwindow* windowPTR, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -105,6 +113,10 @@ void processInput(GLFWwindow* window, ScatterGL::GenericInfo& info)
 		camera.mouseForMenu = false;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
+	if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
+	{
+		//camera.position = 
+	}
 }
 
 GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
@@ -135,9 +147,9 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(ScatterGL::MessageCallback, nullptr);
 	glDepthFunc(GL_LEQUAL);
-	//glFrontFace(GL_CCW);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
+	//glFrontFace(GL_CCW);
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
 	
@@ -154,6 +166,7 @@ int main()
 
 	ScatterGL::MeshObject fullScreenQuad = ScatterGL::MeshObject(ScatterGL::screenQuad, ScatterGL::screenQuadIndices);
 	ScatterGL::BlockCollection blockCollection;
+	ScatterGL::PointLightCollection pointLightCollection;
 
 	ScatterGL::MeshObject blueBlock = ScatterGL::MeshObject(ScatterGL::cube, ScatterGL::cubeIndices);
 	ScatterGL::GLTexture blueTexture("Textures\\diffuseBlueMarble.png");
@@ -178,34 +191,36 @@ int main()
 	blockCollection.blockTextures.push_back(jeroenTexture);
 	blockCollection.blockSpecTextures.push_back(specJeroenTexture);
 
-
-	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
-
-	ScatterGL::Shader cubeShader;
-	cubeShader.initialize("Shaders\\CubeShader.vert",
-							"Shaders\\CubeShader.frag");
-
-	ScatterGL::Shader naturalLightShader;
-	naturalLightShader.initialize("Shaders\\NaturalLight.vert",
-							"Shaders\\NaturalLight.frag");
-
 	ScatterGL::Shader materialShader;
 	materialShader.initialize("Shaders\\Material.vert",
 							"Shaders\\Material.frag");
-
-	ScatterGL::Shader testShader;
-	testShader.initialize("Shaders\\TestShader.vert",
-		"Shaders\\TestShader.frag");
 	
 	ScatterGL::Shader modelShader;
 	modelShader.initialize("Shaders\\modelShader.vert",
 		"Shaders\\modelShader.frag");
 	std::filesystem::path pathName("Models\\sponzaTwo\\sponza.gltf");
 	ScatterGL::Model sponza(pathName.string());
+	glm::mat4 sponzaMatrix = glm::mat4(1.0f);
+	sponzaMatrix = glm::scale(sponzaMatrix, glm::vec3(0.05f, 0.05f, 0.05f));
+
+	std::filesystem::path pathNameSphere("Models\\sphere\\sphere.obj");
+	ScatterGL::Model sphere(pathNameSphere.string());
+	glm::mat4 sphereMatrix = glm::mat4(1.0f);
+	sphereMatrix = glm::scale(sphereMatrix, glm::vec3(0.01f, 0.01f, 0.01f));
+	sphereMatrix = glm::translate(sphereMatrix, glm::vec3(-6000.0f, 777.7f, -2250.0f));
+	glm::vec3 lightPos;
+	lightPos.x = sphereMatrix[3][0];
+	lightPos.y = sphereMatrix[3][1];
+	lightPos.z = sphereMatrix[3][2];
+
 
 	ScatterGL::Shader depthShader;
 	depthShader.initialize("Shaders\\depthShader.vert",
 		"Shaders\\depthShader.frag");
+
+	ScatterGL::Shader uberShader;
+	depthShader.initialize("Shaders\\UberShader.vert",
+		"Shaders\\UberShader.frag");
 
 	ScatterGL::Shader shadowShader;
 	shadowShader.initialize("Shaders\\postProcess.vert",
@@ -255,8 +270,6 @@ int main()
 	glTextureParameteri(framebuffer.depthTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTextureParameteri(framebuffer.depthTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glm::mat4 identityMatrix = glm::mat4(1.0f);
-	identityMatrix = glm::scale(identityMatrix, glm::vec3(0.05f, 0.05f, 0.05f));
 	std::vector<ScatterGL::Mesh> tempMeshCollection;
 	for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
 	{
@@ -264,8 +277,9 @@ int main()
 		tempMeshCollection.push_back(tempMesh);
 		uint64_t tempMeshHandle = myScatter.addMesh(tempMesh.vertices.data(), tempMesh.indices.data(), tempMesh.vertices.size(), tempMesh.indices.size());
 		meshHandlesSponza.push_back(tempMeshHandle);
-		myScatter.addInstance(tempMeshHandle, glm::value_ptr(identityMatrix));
+		myScatter.addInstance(tempMeshHandle, glm::value_ptr(sponzaMatrix));
 	}
+
 	glm::mat4 cubeMatrix = glm::mat4(1.0);
 	cubeMatrix = glm::scale(cubeMatrix, glm::vec3(1.0f, 1.0f, 1.0f));
 	for (unsigned int i = 0; i < blockCollection.blocks.size(); i++)
@@ -282,7 +296,6 @@ int main()
 	
 	myScatter.build();
 	framebuffer.attachTexture(framebuffer.depthTexture);
-
 	ScatterGL::Framebuffer postProcess;
 	postProcess.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 
@@ -292,17 +305,19 @@ int main()
 	float xPositive = 0.05;
 	float xNegative = -0.05;
 	int frameCount = 0;
-
+	float timeTraveled = 0.0;
+	
 	while(!glfwWindowShouldClose(window))
 	{
 		//calculating time passed since last frame
 		float currentFrame = glfwGetTime();
 		info.deltaTime = currentFrame - info.lastFrame;
 		info.lastFrame = currentFrame;
+		float travelSpeed = 1200 * info.deltaTime;
 		myScatter.clearInstances();
 		for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
 		{
-			myScatter.addInstance(meshHandlesSponza[i], glm::value_ptr(identityMatrix));
+			myScatter.addInstance(meshHandlesSponza[i], glm::value_ptr(sponzaMatrix));
 		}
 		for (unsigned int i = 0; i < blockCollection.blocks.size(); i++)
 		{
@@ -357,14 +372,46 @@ int main()
 			materialShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 			blockCollection.blocks[i].drawObject();
 		}
+		
+		for (unsigned int i = 0; i < pointLightCollection.pointLights.size(); i++)
+		{
+			//materialShader.setVec3("pointLight.position", lightPos);
+			materialShader.setMat4("projection", projection);
+			materialShader.setMat4("view", view);
+			materialShader.setMat4("model", pointLightCollection.pointLightMatrices[i]);
+			materialShader.setVec3("viewPosition", camera.position);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, pointLightCollection.pointLightTextures[i].texture);
+			blockCollection.blocks[i].drawObject();
+			pointLightCollection.pointLights[i].drawObject();
 
+		}
+		if (timeTraveled < 10.0f)
+		{
+			sphereMatrix = glm::translate(sphereMatrix, glm::vec3(travelSpeed, 0.0, 0.0));
+			timeTraveled += info.deltaTime;
+		}
+		else
+		{
+			sphereMatrix = glm::translate(sphereMatrix, glm::vec3(-travelSpeed, 0.0, 0.0));
+			timeTraveled += info.deltaTime;
+			if (timeTraveled > 20.0f)
+			{
+				timeTraveled = 0.0;
+			}
+		}
+		
+		materialShader.setMat4("model", sphereMatrix);
+		sphere.draw(materialShader);
+		std::cout << timeTraveled << std::endl;
+		
 		frameCount++;
 		//model rederpass
 		modelShader.use();
 		modelShader.setInt("texture_diffuse1", 0);
 		modelShader.setMat4("projection", projection);
 		modelShader.setMat4("view", view);
-		modelShader.setMat4("model", identityMatrix);
+		modelShader.setMat4("model", sponzaMatrix);
 		sponza.draw(modelShader);
 		
 		framebuffer.unbind();
