@@ -1,9 +1,9 @@
 #include "pch.h"
+#include "GeneralStructs.h"
 #include "ScatterGLui.h"
 #include "Camera.h"
 #include "Shader.h"
 #include "GLTexture.h"
-#include "TestVariables.h"
 #include "MeshObject.h"
 #include "StaticFunction.h"
 #include "Mesh.h"
@@ -14,8 +14,10 @@
 ScatterGL::GenericInfo info{};
 ScatterGL::Framebuffer framebuffer;
 ScatterGL::Camera camera(glm::vec3(0.0f, 1.0f, 5.0f));
-float nearPlane = 0.1f;
-float farPlane = 10000.0f;
+std::vector<uint64_t> meshHandlesBlocks;
+std::vector<uint64_t> meshHandlesSponza;
+
+
 ScatterGL::Material cubeMaterial
 {
 	glm::vec3(1.0f, 0.5f, 0.31f),   //ambient
@@ -150,11 +152,33 @@ int main()
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
 
-	ScatterGL::MeshObject block = ScatterGL::MeshObject(cube, cubeIndices);
-	ScatterGL::MeshObject fullScreenQuad = ScatterGL::MeshObject(screenQuad, screenQuadIndices);
+	ScatterGL::MeshObject fullScreenQuad = ScatterGL::MeshObject(ScatterGL::screenQuad, ScatterGL::screenQuadIndices);
+	ScatterGL::BlockCollection blockCollection;
 
-	ScatterGL::GLTexture boxTexture("Textures\\container2.png");
-	ScatterGL::GLTexture specularBoxTexture("Textures\\container2_specular.png");
+	ScatterGL::MeshObject blueBlock = ScatterGL::MeshObject(ScatterGL::cube, ScatterGL::cubeIndices);
+	ScatterGL::GLTexture blueTexture("Textures\\diffuseBlueMarble.png");
+	ScatterGL::GLTexture blueSpecTexture("Textures\\specularBlueMarble.png");
+	blockCollection.blocks.push_back(blueBlock);
+	blockCollection.blockTextures.push_back(blueTexture);
+	blockCollection.blockSpecTextures.push_back(blueSpecTexture);
+
+
+	ScatterGL::MeshObject stijnBlock = ScatterGL::MeshObject(ScatterGL::cube, ScatterGL::cubeIndices);
+	ScatterGL::GLTexture stijnTexture("Textures\\Stijn.png");
+	ScatterGL::GLTexture specStijnTexture("Textures\\Stijn.png");
+	blockCollection.blocks.push_back(stijnBlock);
+	blockCollection.blockTextures.push_back(stijnTexture);
+	blockCollection.blockSpecTextures.push_back(specStijnTexture);
+
+
+	ScatterGL::MeshObject jeroenBlock = ScatterGL::MeshObject(ScatterGL::cube, ScatterGL::cubeIndices);
+	ScatterGL::GLTexture jeroenTexture("Textures\\Jeroen.png");
+	ScatterGL::GLTexture specJeroenTexture("Textures\\Jeroen.png");
+	blockCollection.blocks.push_back(jeroenBlock);
+	blockCollection.blockTextures.push_back(jeroenTexture);
+	blockCollection.blockSpecTextures.push_back(specJeroenTexture);
+
+
 	ScatterGL::GLTexture faceTexture("Textures\\awesomeface.png");
 
 	ScatterGL::Shader cubeShader;
@@ -233,28 +257,41 @@ int main()
 
 	glm::mat4 identityMatrix = glm::mat4(1.0f);
 	identityMatrix = glm::scale(identityMatrix, glm::vec3(0.05f, 0.05f, 0.05f));
-	glm::mat4 matrixTwee = glm::mat4(1.0);
-	matrixTwee = glm::scale(matrixTwee, glm::vec3(2.0f, 2.0f, 2.0f));
-	matrixTwee = glm::translate(matrixTwee, glm::vec3(0.0f, 2.0f, 0.0f));
+	std::vector<ScatterGL::Mesh> tempMeshCollection;
 	for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
 	{
 		ScatterGL::Mesh& tempMesh = sponza.getMeshes()[i];
+		tempMeshCollection.push_back(tempMesh);
 		uint64_t tempMeshHandle = myScatter.addMesh(tempMesh.vertices.data(), tempMesh.indices.data(), tempMesh.vertices.size(), tempMesh.indices.size());
+		meshHandlesSponza.push_back(tempMeshHandle);
 		myScatter.addInstance(tempMeshHandle, glm::value_ptr(identityMatrix));
 	}
-	ScatterGL::MeshObject& tempMesh = block;
-	uint64_t tempMeshHandle = myScatter.addMesh(tempMesh.vertices.data(), tempMesh.indices.data(), tempMesh.vertices.size(), tempMesh.indices.size());
-	myScatter.addInstance(tempMeshHandle, glm::value_ptr(matrixTwee));
+	glm::mat4 cubeMatrix = glm::mat4(1.0);
+	cubeMatrix = glm::scale(cubeMatrix, glm::vec3(1.0f, 1.0f, 1.0f));
+	for (unsigned int i = 0; i < blockCollection.blocks.size(); i++)
+	{
+		cubeMatrix = glm::translate(cubeMatrix, glm::vec3((float)i * 1.25f, (float)i + 0.5f, (float)i * 1.25f));
+		ScatterGL::MeshObject& tempMesh = blockCollection.blocks[i];
+		blockCollection.blockMatrices.push_back(cubeMatrix);
+		glm::mat4 matrixNew = blockCollection.blockMatrices[i];
+		matrixNew = glm::transpose(matrixNew);
+		uint64_t tempMeshHandle = myScatter.addMesh(tempMesh.vertices.data(), tempMesh.indices.data(), tempMesh.vertices.size(), tempMesh.indices.size());
+		meshHandlesBlocks.push_back(tempMeshHandle);
+		myScatter.addInstance(tempMeshHandle, glm::value_ptr(matrixNew));
+	}
+	
 	myScatter.build();
 	framebuffer.attachTexture(framebuffer.depthTexture);
 
 	ScatterGL::Framebuffer postProcess;
 	postProcess.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 
-
 	glm::mat4 projection = glm::perspectiveRH(glm::radians(camera.zoom),
-		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT, nearPlane, farPlane);
+		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT,  info.nearPlane, info.farPlane);
 	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	float xPositive = 0.05;
+	float xNegative = -0.05;
+	int frameCount = 0;
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -262,6 +299,19 @@ int main()
 		float currentFrame = glfwGetTime();
 		info.deltaTime = currentFrame - info.lastFrame;
 		info.lastFrame = currentFrame;
+		myScatter.clearInstances();
+		for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
+		{
+			myScatter.addInstance(meshHandlesSponza[i], glm::value_ptr(identityMatrix));
+		}
+		for (unsigned int i = 0; i < blockCollection.blocks.size(); i++)
+		{
+			cubeMatrix = glm::translate(cubeMatrix, glm::vec3((float)i * 1.25f, (float)i + 0.5f, (float)i * 1.25f));
+			glm::mat4 matrixNew = blockCollection.blockMatrices[i];
+			matrixNew = glm::transpose(matrixNew);
+			myScatter.addInstance(meshHandlesBlocks[i], glm::value_ptr(matrixNew));
+		}
+		myScatter.build();
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
@@ -273,30 +323,42 @@ int main()
 		framebuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-
 		materialShader.use();
-		materialShader.setMat4("projection", projection);
-		materialShader.setMat4("view", view);
-		materialShader.setMat4("model", matrixTwee);
-		materialShader.setVec3("viewPosition", camera.position);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, boxTexture.texture);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specularBoxTexture.texture);
+		for (unsigned int i = 0; i < blockCollection.blocks.size(); i++)
+		{
+			if (frameCount > 1250)
+			{
+				xPositive *= -1;
+				frameCount = 0;
+			}
+			if (i % 2)
+			{
+				blockCollection.blockMatrices[i] = glm::translate(blockCollection.blockMatrices[i], glm::vec3(xPositive, 0.0, 0.0));
+			}
+			else
+			{
+				//blockCollection.blockMatrices[i] = glm::translate(blockCollection.blockMatrices[i], glm::vec3(-xPositive, 0.0, 0.0));
+				blockCollection.blockMatrices[i] = glm::rotate(blockCollection.blockMatrices[i], info.deltaTime, glm::vec3(0.05f, 0.0f, 0.05f));
+			}
+			materialShader.setMat4("projection", projection);
+			materialShader.setMat4("view", view);
+			materialShader.setMat4("model", blockCollection.blockMatrices[i]);
+			materialShader.setVec3("viewPosition", camera.position);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, blockCollection.blockTextures[i].texture);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, blockCollection.blockSpecTextures[i].texture);
+			materialShader.setInt("material.diffuse", 0);
+			materialShader.setInt("material.specular", 1);
+			materialShader.setFloat("material.shine", 32.0f);
+			materialShader.setVec3("light.direction", sunLight.direction);
+			materialShader.setVec3("light.diffuse", 0.2f, 0.2f, 0.2f);
+			materialShader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
+			materialShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+			blockCollection.blocks[i].drawObject();
+		}
 
-		materialShader.setInt("material.diffuse", 0);
-		materialShader.setInt("material.specular", 1);
-		materialShader.setFloat("material.shine", 32.0f);
-		//glm::vec3 lightDirection = sunLight.direction;
-		//lightDirection *= -10.0f;
-		materialShader.setVec3("light.direction", sunLight.direction);
-		materialShader.setVec3("light.diffuse", 0.2f, 0.2f, 0.2f);
-		materialShader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
-		materialShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-
-		block.drawObject();
-
+		frameCount++;
 		//model rederpass
 		modelShader.use();
 		modelShader.setInt("texture_diffuse1", 0);
@@ -348,13 +410,6 @@ int main()
 	myGui.destroy();
 	glfwTerminate();
 }
-
-void say()
-{
-	std::cout << " IETS \n";
-}
-
-
 
 //float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 //cubeShader.setFloat("r", r);

@@ -159,7 +159,6 @@
     <ClInclude Include="Header\ScatterGLui.h" />
     <ClInclude Include="Header\Shader.h" />
     <ClInclude Include="Header\StaticFunction.h" />
-    <ClInclude Include="Header\TestVariables.h" />
     <ClInclude Include="Libraries\include\glad\glad.h" />
     <ClInclude Include="Libraries\include\KHR\khrplatform.h" />
   </ItemGroup>

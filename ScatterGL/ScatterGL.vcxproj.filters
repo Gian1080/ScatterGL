@@ -33,9 +33,6 @@
     <ClInclude Include="Header\MeshObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header\TestVariables.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Header\StaticFunction.h">
       <Filter>Header Files</Filter>
     </ClInclude>

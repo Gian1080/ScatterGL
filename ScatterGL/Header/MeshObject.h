@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pch.h"
-#include "GeneralStructs.h"
 
 namespace ScatterGL
 {
