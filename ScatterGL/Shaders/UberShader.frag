@@ -34,14 +34,22 @@ uniform Material material;
 uniform Light light;
 uniform PointLight pointLight;
 uniform float pointLightScale;
+uniform bool isModel;
 
 void main()
 {
-    //ambient light
-    vec3 ambient = light.ambient * vec3(texture(material.diffuse, texCoords));
     normalColor = vec4(Normal, 1.0f);
     positionColor = vec4(FragmentPosition, 1.0f);
-
+    if(isModel)
+    {
+        FragColor = texture(texture_diffuse1, texCoords);
+        if(FragColor.a <0.5)
+        {
+            discard;
+        }
+    }
+    //ambient light
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, texCoords));
     //diffuse lighting
     vec3 norm = normalize(Normal);
     float diff = max(dot(norm, -light.direction), 0.0);
@@ -59,14 +67,9 @@ void main()
                             pointLight.quadratic * (distanceToSourceLight * distanceToSourceLight));
 
     //combining results
+    ambient  *=  1 + attenuation; 
+    diffuse  *= 1 + attenuation;
+    specular *= 1 + attenuation;
     vec3 result = diffuse + ambient + specular;
-    ambient  *= attenuation; 
-    diffuse  *= attenuation;
-    specular *= attenuation;
-    FragColor = texture(texture_diffuse1, texCoords);
-    FragColor += vec4(result, 1.0);
-    if(FragColor.a <0.5)
-    {
-        discard;
-    }
+    FragColor = vec4(result, 1.0f);
 }

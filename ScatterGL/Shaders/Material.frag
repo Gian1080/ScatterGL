@@ -33,14 +33,13 @@ uniform vec3 viewPosition;
 uniform Material material;
 uniform Light light;
 uniform PointLight pointLight;
-uniform float pointLightScale;
 
 void main()
 {
-    //ambient light
-    vec3 ambient = light.ambient * vec3(texture(material.diffuse, texCoords));
     normalColor = vec4(Normal, 1.0f);
     positionColor = vec4(FragmentPosition, 1.0f);
+    //ambient light
+    vec3 ambient = light.ambient * texture(material.diffuse, texCoords).rgb;
 
     //diffuse lighting
     vec3 norm = normalize(Normal);
@@ -59,9 +58,9 @@ void main()
                             pointLight.quadratic * (distanceToSourceLight * distanceToSourceLight));
 
     //combining results
-    vec3 result = diffuse + ambient + specular;
-    ambient  *= attenuation; 
+    ambient  *= attenuation;
     diffuse  *= attenuation;
     specular *= attenuation;
+    vec3 result = diffuse + ambient + specular;
     FragColor = vec4(result, 1.0);
 }

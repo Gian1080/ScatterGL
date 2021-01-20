@@ -18,11 +18,11 @@ public:
 
 	void draw(Shader& shader);
 	std::vector<Mesh>& getMeshes();
+	std::vector<Texture> textures_loaded;
+	std::vector<Mesh> meshes;
 
 private:
-	std::vector<Mesh> meshes;
 	std::string directory;
-	std::vector<Texture> textures_loaded;
 	
 	void loadModel(std::string pathName);
 	void processNode(aiNode* node, const aiScene* scene);

@@ -170,7 +170,7 @@ int main()
 
 	ScatterGL::MeshObject blueBlock = ScatterGL::MeshObject(ScatterGL::cube, ScatterGL::cubeIndices);
 	ScatterGL::GLTexture blueTexture("Textures\\diffuseBlueMarble.png");
-	ScatterGL::GLTexture blueSpecTexture("Textures\\specularBlueMarble.png");
+	ScatterGL::GLTexture blueSpecTexture("Textures\\diffuseBlueMarble.png");
 	blockCollection.blocks.push_back(blueBlock);
 	blockCollection.blockTextures.push_back(blueTexture);
 	blockCollection.blockSpecTextures.push_back(blueSpecTexture);
@@ -191,6 +191,13 @@ int main()
 	blockCollection.blockTextures.push_back(jeroenTexture);
 	blockCollection.blockSpecTextures.push_back(specJeroenTexture);
 
+	ScatterGL::MeshObject lightBlock = ScatterGL::MeshObject(ScatterGL::cube, ScatterGL::cubeIndices);
+	ScatterGL::GLTexture lightTexture("Textures\\whiteTexture.png");
+	ScatterGL::GLTexture specLightTexture("Textures\\whiteTexture.png");
+	blockCollection.blocks.push_back(lightBlock);
+	blockCollection.blockTextures.push_back(lightTexture);
+	blockCollection.blockSpecTextures.push_back(specLightTexture);
+
 	ScatterGL::Shader materialShader;
 	materialShader.initialize("Shaders\\Material.vert",
 							"Shaders\\Material.frag");
@@ -208,10 +215,7 @@ int main()
 	glm::mat4 sphereMatrix = glm::mat4(1.0f);
 	sphereMatrix = glm::scale(sphereMatrix, glm::vec3(0.01f, 0.01f, 0.01f));
 	sphereMatrix = glm::translate(sphereMatrix, glm::vec3(-6000.0f, 777.7f, -2250.0f));
-	glm::vec3 lightPos;
-	lightPos.x = sphereMatrix[3][0];
-	lightPos.y = sphereMatrix[3][1];
-	lightPos.z = sphereMatrix[3][2];
+
 
 
 	ScatterGL::Shader depthShader;
@@ -301,12 +305,21 @@ int main()
 
 	glm::mat4 projection = glm::perspectiveRH(glm::radians(camera.zoom),
 		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT,  info.nearPlane, info.farPlane);
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	float xPositive = 0.05;
 	float xNegative = -0.05;
 	int frameCount = 0;
 	float timeTraveled = 0.0;
-	
+	glm::vec3 lightPos;
+	lightPos.x = blockCollection.blockMatrices[3][3][0];
+	lightPos.y = blockCollection.blockMatrices[3][3][1];
+	lightPos.z = blockCollection.blockMatrices[3][3][2];
+
+	glm::vec3 lightPosSphere;
+	lightPosSphere.x = sphereMatrix[3][0];
+	lightPosSphere.y = sphereMatrix[3][1];
+	lightPosSphere.z = sphereMatrix[3][2];
+
 	while(!glfwWindowShouldClose(window))
 	{
 		//calculating time passed since last frame
@@ -314,6 +327,13 @@ int main()
 		info.deltaTime = currentFrame - info.lastFrame;
 		info.lastFrame = currentFrame;
 		float travelSpeed = 1200 * info.deltaTime;
+		lightPos.x = blockCollection.blockMatrices[3][3][0];
+		lightPos.y = blockCollection.blockMatrices[3][3][1];
+		lightPos.z = blockCollection.blockMatrices[3][3][2];
+		lightPosSphere.x = sphereMatrix[3][0];
+		lightPosSphere.y = sphereMatrix[3][1];
+		lightPosSphere.z = sphereMatrix[3][2];
+		std::cout << "x "  << sphereMatrix[3][0] << "y " << sphereMatrix[3][1] << "z " << sphereMatrix[3][2] << std::endl;
 		myScatter.clearInstances();
 		for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
 		{
@@ -338,54 +358,8 @@ int main()
 		framebuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		materialShader.use();
-		for (unsigned int i = 0; i < blockCollection.blocks.size(); i++)
-		{
-			if (frameCount > 1250)
-			{
-				xPositive *= -1;
-				frameCount = 0;
-			}
-			if (i % 2)
-			{
-				blockCollection.blockMatrices[i] = glm::translate(blockCollection.blockMatrices[i], glm::vec3(xPositive, 0.0, 0.0));
-			}
-			else
-			{
-				//blockCollection.blockMatrices[i] = glm::translate(blockCollection.blockMatrices[i], glm::vec3(-xPositive, 0.0, 0.0));
-				blockCollection.blockMatrices[i] = glm::rotate(blockCollection.blockMatrices[i], info.deltaTime, glm::vec3(0.05f, 0.0f, 0.05f));
-			}
-			materialShader.setMat4("projection", projection);
-			materialShader.setMat4("view", view);
-			materialShader.setMat4("model", blockCollection.blockMatrices[i]);
-			materialShader.setVec3("viewPosition", camera.position);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, blockCollection.blockTextures[i].texture);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, blockCollection.blockSpecTextures[i].texture);
-			materialShader.setInt("material.diffuse", 0);
-			materialShader.setInt("material.specular", 1);
-			materialShader.setFloat("material.shine", 32.0f);
-			materialShader.setVec3("light.direction", sunLight.direction);
-			materialShader.setVec3("light.diffuse", 0.2f, 0.2f, 0.2f);
-			materialShader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
-			materialShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-			blockCollection.blocks[i].drawObject();
-		}
-		
-		for (unsigned int i = 0; i < pointLightCollection.pointLights.size(); i++)
-		{
-			//materialShader.setVec3("pointLight.position", lightPos);
-			materialShader.setMat4("projection", projection);
-			materialShader.setMat4("view", view);
-			materialShader.setMat4("model", pointLightCollection.pointLightMatrices[i]);
-			materialShader.setVec3("viewPosition", camera.position);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, pointLightCollection.pointLightTextures[i].texture);
-			blockCollection.blocks[i].drawObject();
-			pointLightCollection.pointLights[i].drawObject();
-
-		}
+		// setting shader
+		uberShader.use();
 		if (timeTraveled < 10.0f)
 		{
 			sphereMatrix = glm::translate(sphereMatrix, glm::vec3(travelSpeed, 0.0, 0.0));
@@ -400,20 +374,57 @@ int main()
 				timeTraveled = 0.0;
 			}
 		}
-		
-		materialShader.setMat4("model", sphereMatrix);
-		sphere.draw(materialShader);
-		std::cout << timeTraveled << std::endl;
+		for (unsigned int i = 0; i < blockCollection.blocks.size(); i++)
+		{
+			if (frameCount > 1250)
+			{
+				xPositive *= -1;
+				frameCount = 0;
+			}
+			if (i % 2)
+			{
+				blockCollection.blockMatrices[i] = glm::translate(blockCollection.blockMatrices[i], glm::vec3(xPositive, 0.0, 0.0));
+			}
+			else if (i % 3)
+			{
+				blockCollection.blockMatrices[i] = glm::rotate(blockCollection.blockMatrices[i], info.deltaTime, glm::vec3(0.05f, 0.0f, 0.05f));
+			}
+			uberShader.setMat4("projection", projection);
+			uberShader.setMat4("view", view);
+			uberShader.setMat4("model", blockCollection.blockMatrices[i]);
+			uberShader.setVec3("viewPosition", camera.position);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, blockCollection.blockTextures[i].texture);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, blockCollection.blockSpecTextures[i].texture);
+			uberShader.setInt("material.diffuse", 0);
+			uberShader.setInt("material.specular", 1);
+			uberShader.setFloat("material.shine", 32.0f);
+			uberShader.setVec3("light.direction", sunLight.direction);
+			uberShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+			uberShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+			uberShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+			uberShader.setVec3("pointLight.position", lightPosSphere);
+			uberShader.setFloat("pointLight.constant", 0.10f);
+			uberShader.setFloat("pointLight.linear", 0.05f);
+			uberShader.setFloat("pointLight.quadratic", 0.01f);
+			blockCollection.blocks[i].drawObject();
+		}
+
+
+		uberShader.setBool("isModel", true);
+		uberShader.setInt("texture_diffuse1", 0);
+		uberShader.setMat4("projection", projection);
+		uberShader.setMat4("view", view);
+		uberShader.setMat4("model", sponzaMatrix);
+		sponza.draw(uberShader);
+		uberShader.setMat4("projection", projection);
+		uberShader.setMat4("view", view);
+		uberShader.setMat4("model", sphereMatrix);
+		sphere.draw(uberShader);
+		uberShader.setBool("isModel", false);
 		
 		frameCount++;
-		//model rederpass
-		modelShader.use();
-		modelShader.setInt("texture_diffuse1", 0);
-		modelShader.setMat4("projection", projection);
-		modelShader.setMat4("view", view);
-		modelShader.setMat4("model", sponzaMatrix);
-		sponza.draw(modelShader);
-		
 		framebuffer.unbind();
 
 		//Scatter API render calls & semaphore calls
@@ -464,3 +475,18 @@ int main()
 //cubeShader.setFloat("g", g);
 //float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 //cubeShader.setFloat("b", b);
+		//std::cout << pointLightCollection.pointLights.size() << std::endl;
+		//for (unsigned int i = 0; i < pointLightCollection.pointLights.size(); i++)
+		//{
+		//	uberShader.setMat4("projection", projection);
+		//	uberShader.setMat4("view", view);
+		//	uberShader.setMat4("model", pointLightCollection.pointLightMatrices[i]);
+		//	uberShader.setVec3("viewPosition", camera.position);
+		//	uberShader.setFloat("material.shine", 32.0f);
+
+		//	glActiveTexture(GL_TEXTURE0);
+		//	glBindTexture(GL_TEXTURE_2D, pointLightCollection.pointLightTextures[i].texture);
+		//	blockCollection.blocks[i].drawObject();
+		//	pointLightCollection.pointLights[i].drawObject();
+
+		//}
