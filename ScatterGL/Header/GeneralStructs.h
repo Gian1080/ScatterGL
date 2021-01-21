@@ -26,12 +26,6 @@ struct BlockCollection
     std::vector<glm::mat4> blockMatrices;
 };
 
-struct PointLightCollection
-{
-    std::vector<MeshObject> pointLights;
-    std::vector<GLTexture> pointLightTextures;
-    std::vector<glm::mat4> pointLightMatrices;
-};
 
 struct Material
 {
@@ -56,7 +50,6 @@ struct PointLight
     float quadratic;
 };
 
-
 struct MaterialLight
 {
 	glm::vec3 direction;
@@ -68,9 +61,9 @@ struct MaterialLight
 
 struct Vertex
 {
-	glm::vec3 position;
-	glm::vec3 normal;
-	glm::vec2 texCoords;
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec2 texCoords;
 };
 
 struct Texture

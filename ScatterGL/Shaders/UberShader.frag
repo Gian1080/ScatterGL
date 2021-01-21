@@ -13,7 +13,8 @@ struct Material
 	sampler2D specular;
 	float shine; 
 };
-struct Light
+
+struct DirectionalLight
 {
 	vec3 direction;
 	vec3 ambient;
@@ -28,13 +29,33 @@ struct PointLight
     float linear;
     float quadratic;
 };
+
+uniform bool isModel;
 uniform sampler2D texture_diffuse1;
 uniform vec3 viewPosition;
 uniform Material material;
-uniform Light light;
+
+uniform DirectionalLight light;
 uniform PointLight pointLight;
-uniform float pointLightScale;
-uniform bool isModel;
+uniform int numberOfPointLights;
+
+
+
+
+// vec3 calcPointLight(PointLight pointje, vec3 normal, vec3 fragPos, vec3 viewDir)
+// {
+//     vec3 lightDir = normalize(pointje.position - fragPos);
+//     //diffuse calculations
+//     float diff = max(dot(normal, lightDir), 0.0);
+//     //specularity calculations
+//     vec3 reflectDir = reflect(-lightDir, normal);
+//     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shine);
+//     // attenuation calculation
+//     float dist = length(pointje.position - fragPos);
+//     float attenuation = 1.0 / (pointje.constant + pointje.linear * dist + pointje.quadratic *
+//                         dist * dist);
+    
+// }
 
 void main()
 {
@@ -67,7 +88,7 @@ void main()
                             pointLight.quadratic * (distanceToSourceLight * distanceToSourceLight));
 
     //combining results
-    ambient  *=  1 + attenuation; 
+    ambient  *= 1 + attenuation; 
     diffuse  *= 1 + attenuation;
     specular *= 1 + attenuation;
     vec3 result = diffuse + ambient + specular;
