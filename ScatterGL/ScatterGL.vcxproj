@@ -109,6 +109,9 @@
       <AdditionalDependencies>Scatter.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/NODEFAULTLIB:library %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PreBuildEvent>
+      <Command>copy "$(SolutionDir)\Libraries\Scatter\x64\Debug\Scatter.dll" "$(TargetDir)"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -145,6 +148,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)Libraries\Scatter\x64\Release</AdditionalLibraryDirectories>
       <AdditionalDependencies>Scatter.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>copy "$(SolutionDir)\Libraries\Scatter\x64\Release\Scatter.dll" "$(TargetDir)"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Header\bewaar.h" />

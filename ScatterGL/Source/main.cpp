@@ -135,7 +135,7 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 		glfwTerminate();
 	}
 	glfwMakeContextCurrent(window);
-	//glfwSwapInterval(0); If you dont want vsync
+	glfwSwapInterval(0); //If you dont want vsync
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		throw std::runtime_error("failed to initialize GLAD \n");
@@ -180,8 +180,8 @@ int main()
 	PointLightCollection pointLightCollection;
 
 	ScatterGL::MeshObject blueBlock = ScatterGL::MeshObject(ScatterGL::cube, ScatterGL::cubeIndices);
-	ScatterGL::GLTexture blueTexture("Textures\\diffuseBlueMarble.png");
-	ScatterGL::GLTexture blueSpecTexture("Textures\\diffuseBlueMarble.png");
+	ScatterGL::GLTexture blueTexture("Textures\\Nico.png");
+	ScatterGL::GLTexture blueSpecTexture("Textures\\Nico.png");
 	blockCollection.blocks.push_back(blueBlock);
 	blockCollection.blockTextures.push_back(blueTexture);
 	blockCollection.blockSpecTextures.push_back(blueSpecTexture);
@@ -201,8 +201,8 @@ int main()
 	blockCollection.blockSpecTextures.push_back(specJeroenTexture);
 
 	ScatterGL::MeshObject lightBlock = ScatterGL::MeshObject(ScatterGL::cube, ScatterGL::cubeIndices);
-	ScatterGL::GLTexture lightTexture("Textures\\whiteTexture.png");
-	ScatterGL::GLTexture specLightTexture("Textures\\whiteTexture.png");
+	ScatterGL::GLTexture lightTexture("Textures\\gianTwee.png");
+	ScatterGL::GLTexture specLightTexture("Textures\\gianTwee.png");
 	blockCollection.blocks.push_back(lightBlock);
 	blockCollection.blockTextures.push_back(lightTexture);
 	blockCollection.blockSpecTextures.push_back(specLightTexture);
@@ -324,6 +324,10 @@ int main()
 	lightPosSphere.x = sphereMatrixOne[3][0];
 	lightPosSphere.y = sphereMatrixOne[3][1];
 	lightPosSphere.z = sphereMatrixOne[3][2];
+	glm::vec3 lightPosSphereTwo;
+	lightPosSphereTwo.x = sphereMatrixTwo[3][0];
+	lightPosSphereTwo.y = sphereMatrixTwo[3][1];
+	lightPosSphereTwo.z = sphereMatrixTwo[3][2];
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -336,6 +340,11 @@ int main()
 		lightPosSphere.x = sphereMatrixOne[3][0];
 		lightPosSphere.y = sphereMatrixOne[3][1];
 		lightPosSphere.z = sphereMatrixOne[3][2];
+
+		lightPosSphereTwo.x = sphereMatrixTwo[3][0];
+		lightPosSphereTwo.y = sphereMatrixTwo[3][1];
+		lightPosSphereTwo.z = sphereMatrixTwo[3][2];
+
 		myScatter.clearInstances();
 		for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
 		{
@@ -413,6 +422,8 @@ int main()
 			blockCollection.blocks[i].drawObject();
 		}
 		//Starting PointLights!
+		uberShader.setBool("isModel", true);
+		uberShader.setInt("numberOfPointLights", pointLightCollection.pointLights.size());
 		for (unsigned int i = 0; i < pointLightCollection.pointLights.size(); i++)
 		{
 			uberShader.setMat4("model", *pointLightCollection.pointLightMatrices[i]);
@@ -422,7 +433,6 @@ int main()
 			pointLightCollection.pointLights[i]->draw(uberShader);
 		}
 		// Starting Sponza!
-		uberShader.setBool("isModel", true);
 		uberShader.setInt("texture_diffuse1", 0);
 		uberShader.setMat4("model", sponzaMatrix);
 		sponza.draw(uberShader);
