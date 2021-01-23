@@ -15,11 +15,10 @@
 
 ScatterGL::GenericInfo info{};
 ScatterGL::Framebuffer framebuffer;
+ScatterGL::Framebuffer postProcess;
 ScatterGL::Camera camera(glm::vec3(0.0f, 1.0f, 5.0f));
 std::vector<uint64_t> meshHandlesBlocks;
 std::vector<uint64_t> meshHandlesSponza;
-std::vector<ScatterGL::Mesh> lightOrbs;
-
 
 ScatterGL::Material cubeMaterial
 {
@@ -32,15 +31,32 @@ ScatterGL::Material cubeMaterial
 ScatterGL::DirectionalLight sunLight
 {
 	glm::vec3(0.0f, -1.0f, 0.0f), //direction
+	glm::vec3(0.5f, 0.5f, 0.5f),
+	glm::vec3(0.5f, 0.5f, 0.5f),
+	glm::vec3(0.5f, 0.5f, 0.5f),
 	1.0f						//intensity
 };
 
-ScatterGL::PointLight lightOrb
+ScatterGL::PointLight lightOrbOne
 {
 	glm::vec3(0.0f, 0.0f, 0.0f), //position
 	0.05f,	//constant
 	0.05f,  //linear
 	0.01f  //quadratic
+};
+
+ScatterGL::PointLight lightOrbTwo
+{
+	glm::vec3(0.0f, 0.0f, 0.0f), //position
+	0.04f,	//constant
+	0.04f,  //linear
+	0.01f  //quadratic
+};
+
+struct PointLightCollection
+{
+	std::vector<ScatterGL::PointLight> lights;
+	std::vector<glm::mat4*> pointLightMatrices;
 };
 
 void framebuffer_resize_callback(GLFWwindow* windowPTR, int width, int height)
@@ -135,7 +151,7 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 		glfwTerminate();
 	}
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(0); //If you dont want vsync
+	//glfwSwapInterval(0); //If you dont want vsync
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		throw std::runtime_error("failed to initialize GLAD \n");
@@ -160,13 +176,6 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 	return window;
 }
 
-struct PointLightCollection
-{
-	std::vector<ScatterGL::Model*> pointLights;
-	std::vector<ScatterGL::GLTexture> pointLightTextures;
-	std::vector<glm::mat4*> pointLightMatrices;
-};
-
 int main()
 {
 	srand(static_cast <unsigned> (time(0)));
@@ -174,6 +183,9 @@ int main()
 	GLFWwindow* window = initWindow(info);
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
+
+
+	std::vector<ScatterGL::Mesh> lightOrbs;
 
 	ScatterGL::MeshObject fullScreenQuad = ScatterGL::MeshObject(ScatterGL::screenQuad, ScatterGL::screenQuadIndices);
 	ScatterGL::BlockCollection blockCollection;
@@ -214,19 +226,21 @@ int main()
 
 	//Sphere making
 	std::filesystem::path pathNameSphere("Models\\sphere\\sphere.obj");
-	ScatterGL::Model sphereOne(pathNameSphere.string());
+	ScatterGL::GLTexture whiteTexture("Textures\\whiteTexture.png");
+	ScatterGL::Model sphereModel(pathNameSphere.string());
+
+	// pointlights
 	glm::mat4 sphereMatrixOne = glm::mat4(1.0f);
 	sphereMatrixOne = glm::scale(sphereMatrixOne, glm::vec3(0.01f, 0.01f, 0.01f));
 	sphereMatrixOne = glm::translate(sphereMatrixOne, glm::vec3(-6000.0f, 777.7f, -2250.0f));
-	pointLightCollection.pointLights.push_back(&sphereOne);
 	pointLightCollection.pointLightMatrices.push_back(&sphereMatrixOne);
+	pointLightCollection.lights.push_back(lightOrbOne);
 
-	ScatterGL::Model sphereTwo(pathNameSphere.string());
 	glm::mat4 sphereMatrixTwo = glm::mat4(1.0f);
 	sphereMatrixTwo = glm::scale(sphereMatrixTwo, glm::vec3(0.01f, 0.01f, 0.01f));
 	sphereMatrixTwo = glm::translate(sphereMatrixTwo, glm::vec3(5800.0f, 777.7f, 2100.0f));
-	pointLightCollection.pointLights.push_back(&sphereTwo);
 	pointLightCollection.pointLightMatrices.push_back(&sphereMatrixTwo);
+	pointLightCollection.lights.push_back(lightOrbTwo);
 
 	ScatterGL::Shader depthShader;
 	depthShader.initialize("Shaders\\depthShader.vert",
@@ -240,6 +254,7 @@ int main()
 	shadowShader.initialize("Shaders\\postProcess.vert",
 		"Shaders\\postProcess.frag");
 
+	postProcess.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	//starting Shadow API Scatter
 	scatter::Scatter myScatter;
@@ -283,7 +298,7 @@ int main()
 	glTextureStorageMem2DEXT(framebuffer.depthTexture, 1, GL_DEPTH_COMPONENT32F, info.SCREEN_WIDTH, info.SCREEN_HEIGHT, depthTextureMemory, 0);
 	glTextureParameteri(framebuffer.depthTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTextureParameteri(framebuffer.depthTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+	
 	std::vector<ScatterGL::Mesh> tempMeshCollection;
 	for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
 	{
@@ -310,24 +325,14 @@ int main()
 	
 	myScatter.build();
 	framebuffer.attachTexture(framebuffer.depthTexture);
-	ScatterGL::Framebuffer postProcess;
-	postProcess.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
+
 
 	glm::mat4 projection = glm::perspectiveRH(glm::radians(camera.zoom),
 		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT,  info.nearPlane, info.farPlane);
 	float xPositive = 0.05;
-	float xNegative = -0.05;
 	int frameCount = 0;
 	float timeTraveled = 0.0;
 
-	glm::vec3 lightPosSphere;
-	lightPosSphere.x = sphereMatrixOne[3][0];
-	lightPosSphere.y = sphereMatrixOne[3][1];
-	lightPosSphere.z = sphereMatrixOne[3][2];
-	glm::vec3 lightPosSphereTwo;
-	lightPosSphereTwo.x = sphereMatrixTwo[3][0];
-	lightPosSphereTwo.y = sphereMatrixTwo[3][1];
-	lightPosSphereTwo.z = sphereMatrixTwo[3][2];
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -336,14 +341,6 @@ int main()
 		info.deltaTime = currentFrame - info.lastFrame;
 		info.lastFrame = currentFrame;
 		float travelSpeed = 1200 * info.deltaTime;
-
-		lightPosSphere.x = sphereMatrixOne[3][0];
-		lightPosSphere.y = sphereMatrixOne[3][1];
-		lightPosSphere.z = sphereMatrixOne[3][2];
-
-		lightPosSphereTwo.x = sphereMatrixTwo[3][0];
-		lightPosSphereTwo.y = sphereMatrixTwo[3][1];
-		lightPosSphereTwo.z = sphereMatrixTwo[3][2];
 
 		myScatter.clearInstances();
 		for (unsigned int i = 0; i < sponza.getMeshes().size(); i++)
@@ -377,14 +374,14 @@ int main()
 		uberShader.setVec3("viewPosition", camera.position);
 		if (timeTraveled < 10.0f)
 		{
-			sphereMatrixOne = glm::translate(sphereMatrixOne, glm::vec3(travelSpeed, 0.0, 0.0));
-			sphereMatrixTwo = glm::translate(sphereMatrixTwo, glm::vec3(-travelSpeed, 0.0, 0.0));
+			*pointLightCollection.pointLightMatrices[0] = glm::translate(*pointLightCollection.pointLightMatrices[0], glm::vec3(travelSpeed, 0.0, 0.0));
+			*pointLightCollection.pointLightMatrices[1] = glm::translate(*pointLightCollection.pointLightMatrices[1], glm::vec3(-travelSpeed, 0.0, 0.0));
 			timeTraveled += info.deltaTime;
 		}
 		else
 		{
-			sphereMatrixOne = glm::translate(sphereMatrixOne, glm::vec3(-travelSpeed, 0.0, 0.0));
-			sphereMatrixTwo = glm::translate(sphereMatrixTwo, glm::vec3(travelSpeed, 0.0, 0.0));
+			*pointLightCollection.pointLightMatrices[0] = glm::translate(*pointLightCollection.pointLightMatrices[0], glm::vec3(-travelSpeed, 0.0, 0.0));
+			*pointLightCollection.pointLightMatrices[1] = glm::translate(*pointLightCollection.pointLightMatrices[1], glm::vec3(travelSpeed, 0.0, 0.0));
 			timeTraveled += info.deltaTime;
 			if (timeTraveled > 20.0f)
 			{
@@ -415,28 +412,33 @@ int main()
 			uberShader.setInt("material.specular", 1);
 			uberShader.setFloat("material.shine", 32.0f);
 			uberShader.setVec3("light.direction", sunLight.direction);
-			uberShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-			uberShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-			uberShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-			uberShader.setVec3("pointLight.position", lightPosSphere);
+			uberShader.setVec3("light.ambient", sunLight.ambient);
+			uberShader.setVec3("light.diffuse", sunLight.diffuse);
+			uberShader.setVec3("light.specular", sunLight.specular);
 			blockCollection.blocks[i].drawObject();
 		}
+
 		//Starting PointLights!
-		uberShader.setBool("isModel", true);
-		uberShader.setInt("numberOfPointLights", pointLightCollection.pointLights.size());
-		for (unsigned int i = 0; i < pointLightCollection.pointLights.size(); i++)
-		{
+		uberShader.setInt("numberOfPointLights", pointLightCollection.lights.size());
+		for (unsigned int i = 0; i < pointLightCollection.lights.size(); i++)
+		{	
+			std::string iString = std::to_string(i);
+			glm::mat4 thing = *pointLightCollection.pointLightMatrices[i];
+			glm::vec3 pointLightPos;
+			std::cout << glm::to_string(pointLightPos) << std::endl;
+			pointLightPos = glm::vec3(thing[3]);
 			uberShader.setMat4("model", *pointLightCollection.pointLightMatrices[i]);
-			uberShader.setFloat("pointLight.constant", lightOrb.constant);
-			uberShader.setFloat("pointLight.linear", lightOrb.linear);
-			uberShader.setFloat("pointLight.quadratic", lightOrb.quadratic);
-			pointLightCollection.pointLights[i]->draw(uberShader);
+			uberShader.setVec3("pointLightArray[" + iString +  "].position", pointLightPos);
+			uberShader.setFloat("pointLightArray[" + iString + "].constant", pointLightCollection.lights[i].constant);
+			uberShader.setFloat("pointLightArray[" + iString + "].linear", pointLightCollection.lights[i].linear);
+			uberShader.setFloat("pointLightArray[" + iString + "].quadratic", pointLightCollection.lights[i].quadratic);
 		}
-		// Starting Sponza!
+		uberShader.setBool("isModel", true);
 		uberShader.setInt("texture_diffuse1", 0);
 		uberShader.setMat4("model", sponzaMatrix);
 		sponza.draw(uberShader);
 		uberShader.setBool("isModel", false);
+		// Starting Sponza!
 		frameCount++;
 		framebuffer.unbind();
 
