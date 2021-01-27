@@ -184,7 +184,6 @@ int main()
 	ScatterGL::ScatterGLui myGui;
 	myGui.init(window);
 
-
 	std::vector<ScatterGL::Mesh> lightOrbs;
 
 	ScatterGL::MeshObject fullScreenQuad = ScatterGL::MeshObject(ScatterGL::screenQuad, ScatterGL::screenQuadIndices);
@@ -254,6 +253,7 @@ int main()
 	shadowShader.initialize("Shaders\\postProcess.vert",
 		"Shaders\\postProcess.frag");
 
+	//initializing framebuffers
 	postProcess.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	framebuffer.initialize(info.SCREEN_WIDTH, info.SCREEN_HEIGHT);
 	//starting Shadow API Scatter
@@ -309,6 +309,7 @@ int main()
 		myScatter.addInstance(tempMeshHandle, glm::value_ptr(sponzaMatrix));
 	}
 
+	//creating cube identity matrix
 	glm::mat4 cubeMatrix = glm::mat4(1.0);
 	cubeMatrix = glm::scale(cubeMatrix, glm::vec3(1.0f, 1.0f, 1.0f));
 	for (unsigned int i = 0; i < blockCollection.blocks.size(); i++)
@@ -322,17 +323,13 @@ int main()
 		meshHandlesBlocks.push_back(tempMeshHandle);
 		myScatter.addInstance(tempMeshHandle, glm::value_ptr(matrixNew));
 	}
-	
+
 	myScatter.build();
 	framebuffer.attachTexture(framebuffer.depthTexture);
 
 
 	glm::mat4 projection = glm::perspectiveRH(glm::radians(camera.zoom),
 		(float)info.SCREEN_WIDTH / (float)info.SCREEN_HEIGHT,  info.nearPlane, info.farPlane);
-	float xPositive = 0.05;
-	int frameCount = 0;
-	float timeTraveled = 0.0;
-
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -372,32 +369,32 @@ int main()
 		uberShader.setMat4("projection", projection);
 		uberShader.setMat4("view", view);
 		uberShader.setVec3("viewPosition", camera.position);
-		if (timeTraveled < 10.0f)
+		if (info.timeTraveled < 10.0f)
 		{
 			*pointLightCollection.pointLightMatrices[0] = glm::translate(*pointLightCollection.pointLightMatrices[0], glm::vec3(travelSpeed, 0.0, 0.0));
 			*pointLightCollection.pointLightMatrices[1] = glm::translate(*pointLightCollection.pointLightMatrices[1], glm::vec3(-travelSpeed, 0.0, 0.0));
-			timeTraveled += info.deltaTime;
+			info.timeTraveled += info.deltaTime;
 		}
 		else
 		{
 			*pointLightCollection.pointLightMatrices[0] = glm::translate(*pointLightCollection.pointLightMatrices[0], glm::vec3(-travelSpeed, 0.0, 0.0));
 			*pointLightCollection.pointLightMatrices[1] = glm::translate(*pointLightCollection.pointLightMatrices[1], glm::vec3(travelSpeed, 0.0, 0.0));
-			timeTraveled += info.deltaTime;
-			if (timeTraveled > 20.0f)
+			info.timeTraveled += info.deltaTime;
+			if (info.timeTraveled > 20.0f)
 			{
-				timeTraveled = 0.0;
+				info.timeTraveled = 0.0;
 			}
 		}
 		for (unsigned int i = 0; i < blockCollection.blocks.size(); i++)
 		{
-			if (frameCount > 1250)
+			if (info.frameCount > 1250)
 			{
-				xPositive *= -1;
-				frameCount = 0;
+				info.xPositive *= -1;
+				info.frameCount = 0;
 			}
 			if (i % 2)
 			{
-				blockCollection.blockMatrices[i] = glm::translate(blockCollection.blockMatrices[i], glm::vec3(xPositive, 0.0, 0.0));
+				blockCollection.blockMatrices[i] = glm::translate(blockCollection.blockMatrices[i], glm::vec3(info.xPositive, 0.0, 0.0));
 			}
 			else if (i % 3)
 			{
@@ -439,7 +436,7 @@ int main()
 		sponza.draw(uberShader);
 		uberShader.setBool("isModel", false);
 		// Starting Sponza!
-		frameCount++;
+		info.frameCount++;
 		framebuffer.unbind();
 
 		//Scatter API render calls & semaphore calls

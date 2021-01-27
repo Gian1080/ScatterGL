@@ -16,6 +16,9 @@ struct GenericInfo
 	float lastFrame = 0.0f;
 	float nearPlane = 0.1f;
 	float farPlane = 10000.0f;
+    float xPositive = 0.05;
+    int frameCount = 0;
+    float timeTraveled = 0.0;
 };
 
 struct BlockCollection
