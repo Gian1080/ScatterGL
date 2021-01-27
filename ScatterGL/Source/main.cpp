@@ -11,8 +11,6 @@
 #include "Framebuffer.h"
 #include "Scatter.h"
 
-
-
 ScatterGL::GenericInfo info{};
 ScatterGL::Framebuffer framebuffer;
 ScatterGL::Framebuffer postProcess;
@@ -172,7 +170,6 @@ GLFWwindow* initWindow(ScatterGL::GenericInfo& info)
 	//glFrontFace(GL_CCW);
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
-	
 	return window;
 }
 
