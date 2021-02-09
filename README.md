@@ -1,2 +1,2 @@
 # ScatterGL
- leanring OpenGL basics
+ learning OpenGL basics
