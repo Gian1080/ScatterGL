@@ -1,2 +1,2 @@
 # ScatterGL
- learning OpenGL basics
+Learning OpenGL basics.
